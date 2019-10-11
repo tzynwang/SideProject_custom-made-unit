@@ -15,7 +15,6 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
