@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    新增帳目
+{% endblock %}
+
+{% block main %}
+    <form action="/add" method="post">
+        <div class="form-group">
+            <select class="form-control" name="group" autofocus required>
+                <option selected disabled value="">帳目組別</option>
+                {% for key, value in groupName.items() %}
+                <option value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <input class="form-control" type="number" name="amount" min="1" 
+            placeholder="金額" required autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" type="text" name="notes" maxlength="32"
+            placeholder="備註 (最多32中文字)" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <select class="form-control" name="YYYY">
+                <option selected value="{{ YYYY }}">{{ YYYY }}</option>
+                {% for Y in range(YYYY-1, YYYY+2) %}
+                <option value="{{ Y }}">{{ Y }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-control" name="MM">
+                <option selected value="{{ MM }}">{{ MM }}</option>
+                {% for M in range(1, 13) %}
+                <option value="{{ M }}">{{ M }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-control" name="DD">
+                <option selected value="{{ DD }}">{{ DD }}</option>
+                {% for D in range(1, 32) %}
+                <option value="{{ D }}">{{ D }}</option>
+                {% endfor %}
+            </select>
+            (
+            <select class="form-control" name="hh">
+                <option selected value="{{ hh }}">{{ hh }}</option>
+                {% for h in range(00, 24) %}
+                <option value="{{ h }}">{{ h }}</option>
+                {% endfor %}
+            </select>
+            :
+            <select class="form-control" name="mm">
+                <option selected value="{{ mm }}">{{ mm }}</option>
+                {% for m in range(00, 60) %}
+                <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+            </select>
+            )
+        </div>
+
+        <br>
+        <div class="form-group">
+            <button class="btn btn-primary" type="submit">記帳</button>
+        </div>
+    </form>
+{% endblock %}
