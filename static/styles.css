@@ -1,0 +1,45 @@
+@import url(https://fonts.googleapis.com/earlyaccess/notosanstc.css);
+
+nav .navbar-brand
+{
+    font-size: large;
+    font-family: 'cwTeXYen', sans-serif;
+}
+
+body
+{
+    background-image:url('./background_image_p.png');
+    background-repeat: no-repeat;
+    background-position: top center;
+}
+
+main .form-control
+{
+    /* center form controls */
+    display: inline-block;
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+main
+{
+    /* scroll horizontally as needed */
+    overflow-x: auto;
+
+    /* center contents */
+    text-align: center;
+
+    font-family: 'cwTeXYen', sans-serif;
+}
+
+.warning
+{
+    color: red;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}

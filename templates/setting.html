@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    設定
+{% endblock %}
+
+{% block main %}
+
+    <div class="alert alert-success" role="alert" id="updateOK">已更新</div>
+    <div class="alert alert-warning" role="alert" id="hintBox"><span id="hintText"></span></div>
+    <div class="alert alert-danger" role="alert" id="updateFail">更新失敗</div>
+
+    <label for="gNames">更新帳目分組名稱：</label>
+    <select class="form-control" id="gNames">
+        <option selected disabled value="">先選擇組別</option>
+        <option id="op0" value="g0"></option>
+        <option id="op1" value="g1"></option>
+        <option id="op2" value="g2"></option>
+        <option id="op3" value="g3"></option>
+    </select>
+    <input class="form-control" id="updateName" type="text" placeholder="再輸入自訂名稱" maxlength="24">
+    <button class="btn btn-primary" type="button" onclick="updateName()">更新</button>
+    <hr>
+
+    <lable for="pass1">更新密碼：</lable>
+    <input class="form-control" type="password" autocomplete="off" name="password" id="pass1" placeholder="密碼">
+    <input class="form-control" type="password" autocomplete="off" name="confirmation" id="pass2" placeholder="確認密碼">
+    <button class="btn btn-primary" type="button" onclick="updatePass()">更新</button>
+    <br>
+    <small>長度限制8-24字，至少包含1個英文與1個數字</small>
+    
+
+    <script>
+        $(document).ready(
+            function getGroupName() {
+                $.ajax({
+                    url: "/getGroupName",
+                    type: "GET",
+                    dataType: "json",
+                    success: function(result) {
+                        $("#op0").text(result.g0);
+                        $("#op1").text(result.g1);
+                        $("#op2").text(result.g2);
+                        $("#op3").text(result.g3);
+                    }
+                });
+            },
+            $("#hintBox").hide(),
+            $("#updateOK").hide(),
+            $("#updateFail").hide()
+        );
+
+        function updateName() {
+            var updateName = $("#updateName").val();
+            var selectGroup = $("#gNames").val();
+
+            if (!updateName || !selectGroup) {
+                $("#hintText").html("請選擇組別並輸入欲更新之名稱");
+                $("#hintBox").show();
+            }
+            else {
+                $.ajax({
+                    url: "/updateGroupName",
+                    type: "POST",
+                    data: JSON.stringify({"gNames": selectGroup, "updateName": updateName}),
+                    dataType: "json",
+                    contentType : "application/json; charset=UTF-8'",
+                    success: function(result) {
+                        if (result == true) {
+                            $("#updateOK").show().delay(3000).fadeOut();
+                            $('#gNames').val("");
+                            $("#updateName").val("");
+                            $.ajax({
+                                url: "/getGroupName",
+                                type: "GET",
+                                dataType: "json",
+                                success: function(result) {
+                                    $("#op0").text(result.g0);
+                                    $("#op1").text(result.g1);
+                                    $("#op2").text(result.g2);
+                                    $("#op3").text(result.g3);
+                                }
+                            });
+                        }
+                        else {
+                            $("#updateFail").show().delay(3000).fadeOut();
+                        }
+                    }
+                });
+            }
+        }
+
+        function updatePass() {
+            var pass1 = $('#pass1').val();
+            var pass2 = $('#pass2').val();
+            if (!pass1 || !pass2) {
+                $("#hintBox").show();
+                $("#hintText").html("請輸入密碼與確認密碼");
+            }
+            else if (pass1 != pass2) { 
+                $("#hintBox").show();
+                $("#hintText").html("密碼與確認密碼的內容不同");
+            }
+            else if (pass1 == pass2) {
+                $.ajax({
+                    url: "/checkPass",
+                    type: "POST",
+                    data: JSON.stringify({"pass1": pass1}),
+                    dataType: "json",
+                    contentType : "application/json",
+                    success: function(result) {
+                        if (result == "nameContFail") {
+                            $("#hintBox").show();
+                            $("#hintText").html("密碼內容不符合規範");
+                        }
+                        if (result == "lenFail") {
+                            $("#hintBox").show();
+                            $("#hintText").html("密碼長度不符合規範");
+                        }
+                        if (result == true) {
+                            $("#hintBox").hide();
+                            $.ajax({
+                                url: "/updatePass",
+                                type: "POST",
+                                data: JSON.stringify({"pass1": pass1}),
+                                dataType: "json",
+                                contentType : "application/json",
+                                success: function(result = true) {
+                                    $('#pass1').val("");
+                                    $('#pass2').val("");
+                                    $("#updateOK").show().delay(3000).fadeOut();
+                                },
+                                error: function() {
+                                    $("#updateFail").show().delay(3000).fadeOut();
+                                }
+                            });
+                        }
+                    },
+                });
+            }
+        }
+
+    </script>
+{% endblock %}

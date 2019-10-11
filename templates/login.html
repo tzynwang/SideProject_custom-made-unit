@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    登入
+{% endblock %}
+
+{% block main %}
+    <form action="/login" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="username" id="username" 
+            placeholder="Username" type="text" onchange="checkUser()">
+            <small class="form-text" id="hint">查無帳號<span id="ID"></span>，<a href="/register">去註冊？</a></small>
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="password" placeholder="Password" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit" id="submit">登入</button>
+    </form>
+
+    <script>
+        $(document).ready(
+            $("#hint").hide()
+            );
+
+        function checkUser() {
+            var username = $('#username').val();
+            $.ajax({
+                url: "/newUser",
+                type: "GET",
+                data: {"username": username},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result){
+                    if (result == true) {
+                        $("#hint").show();
+                        $("#ID").html(username);
+                        $("#submit").attr("disabled", true);
+                    }
+                    else {
+                        $("#hint").hide();
+                        $("#submit").attr("disabled", false);
+                    }
+                },
+            });
+        }
+    </script>
+{% endblock %}
