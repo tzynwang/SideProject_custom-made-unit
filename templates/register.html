@@ -16,6 +16,12 @@
         </div>
         
         <div class="form-group">
+            <input class="form-control" type="email" autocomplete="off"
+            name="email" id="email" placeholder="Email" required onchange="validMail()">
+            <small class="form-text text-muted">註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能</small>
+        </div>
+
+        <div class="form-group">
             <input class="form-control" type="password" autocomplete="off" 
             name="password" id="pass1" placeholder="密碼" required onchange="validPass()">
         </div>
@@ -51,17 +57,44 @@
                         $("#hintText").html("帳號內容不符合規範");
                         $("#submit").attr("disabled", true);
                     }
-                    if (result == "userExist") {
+                    else if (result == "userExist") {
                         $("#hintBox").show();
                         $("#hintText").html("這個帳號名稱已經有人使用過了，請換一個");
                         $("#submit").attr("disabled", true);
                     }
-                    if (result == "lenFail") {
+                    else if (result == "lenFail") {
                         $("#hintBox").show();
                         $("#hintText").html("帳號長度不符合規範");
                         $("#submit").attr("disabled", true);
                     }
-                    if (result == true) {
+                    else {
+                        $("#hintBox").hide();
+                        $("#submit").attr("disabled", false);
+                    }
+                },
+            });
+        }
+
+        function validMail() {
+            var maddress = $('#email').val();
+            $.ajax({
+                type: "GET",
+                url: "/mailValidate",
+                data: {"maddress": maddress},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result) {
+                    if (result == "mailExist") {
+                        $("#hintBox").show();
+                        $("#hintText").html("輸入的email已經被使用過了");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else if (result == "mailFail") {
+                        $("#hintBox").show();
+                        $("#hintText").html("輸入的email無效，請檢查拼字、或是確認這個email的有效性");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else {
                         $("#hintBox").hide();
                         $("#submit").attr("disabled", false);
                     }
@@ -83,12 +116,12 @@
                         $("#hintText").html("密碼內容不符合規範");
                         $("#submit").attr("disabled", true);
                     }
-                    if (result == "lenFail") {
+                    else if (result == "lenFail") {
                         $("#hintBox").show();
                         $("#hintText").html("密碼長度不符合規範");
                         $("#submit").attr("disabled", true);
                     }
-                    if (result == true) {
+                    else {
                         $("#hintBox").hide();
                         $("#submit").attr("disabled", false);
                     }

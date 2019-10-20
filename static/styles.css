@@ -6,13 +6,6 @@ nav .navbar-brand
     font-family: 'cwTeXYen', sans-serif;
 }
 
-body
-{
-    background-image:url('./background_image_p.png');
-    background-repeat: no-repeat;
-    background-position: top center;
-}
-
 main .form-control
 {
     /* center form controls */
@@ -29,8 +22,6 @@ main
 
     /* center contents */
     text-align: center;
-
-    font-family: 'cwTeXYen', sans-serif;
 }
 
 .warning

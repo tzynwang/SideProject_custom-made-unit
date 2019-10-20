@@ -1,9 +1,15 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    結算
+    狀態
 {% endblock %}
 
 {% block main %}
-    #TODO: display accounts log
+    {% if confStatus == 0 %}
+        帳號"{{username}}"還沒被啟動，請至{{email}}收信，點擊信中提供的網址來啟動帳號<br>
+        沒有收到認證信？請<a href="/gen_token">點此</a>來重新發送帳號認證信件<br>
+    {% elif targetStatus ==0 %}
+        還沒設定記帳目標？<a href="/setting#target">點此</a>來進行設定<br>
+    {% endif %}
+    本月({{ YYYY }}/{{ MM }})累積消費金額為：{{ amount }}元
 {% endblock %}

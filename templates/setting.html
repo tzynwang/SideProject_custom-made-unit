@@ -10,13 +10,31 @@
     <div class="alert alert-warning" role="alert" id="hintBox"><span id="hintText"></span></div>
     <div class="alert alert-danger" role="alert" id="updateFail">更新失敗</div>
 
+    {% if targetStatus == 0 %}
+    <label for="target">還未設定目標與金額：</label>
+    <input class="form-control" id="targetF" type="text" placeholder="設定目標(最多24中文字)" maxlength="24">
+    <input class="form-control" id="targetAmountF" type="number" placeholder="設定金額" min="1" style="width: 7em">
+    <button class="btn btn-primary" id="targetAmountButton" type="button" onclick="setTarget()">設定</button>
+    <hr>
+    {% else %}
+    <label for="target">目前目標：<span id="hintTargetName">{{ targetStatus }}</span></label> &&
+    <label for="targetAmount">目標金額：<span id="hintTargetAmount">{{ targetAmount }}元</span></label>
+    <br>
+    <input class="form-control" id="targetU" type="text" placeholder="更新目標(最多24中文字)" maxlength="24">
+    <button class="btn btn-primary" id="targetAmountButton" type="button" onclick="updateTargetName()">更新</button>
+     
+    <input class="form-control" id="targetAmountU" type="number" placeholder="更新金額" min="1" style="width: 7em">
+    <button class="btn btn-primary" id="targetAmountButton" type="button" onclick="updateTargetAmount()">更新</button>
+    <hr>
+    {% endif %}
+    
     <label for="gNames">更新帳目分組名稱：</label>
     <select class="form-control" id="gNames">
         <option selected disabled value="">先選擇組別</option>
-        <option id="op0" value="g0"></option>
-        <option id="op1" value="g1"></option>
-        <option id="op2" value="g2"></option>
-        <option id="op3" value="g3"></option>
+        <option id="op0" value="g0">{{groupName[0]}}</option>
+        <option id="op1" value="g1">{{groupName[1]}}</option>
+        <option id="op2" value="g2">{{groupName[2]}}</option>
+        <option id="op3" value="g3">{{groupName[3]}}</option>
     </select>
     <input class="form-control" id="updateName" type="text" placeholder="再輸入自訂名稱" maxlength="24">
     <button class="btn btn-primary" type="button" onclick="updateName()">更新</button>
@@ -30,25 +48,128 @@
     <small>長度限制8-24字，至少包含1個英文與1個數字</small>
     
 
-    <script>
+    <script>        
         $(document).ready(
-            function getGroupName() {
-                $.ajax({
-                    url: "/getGroupName",
-                    type: "GET",
-                    dataType: "json",
-                    success: function(result) {
-                        $("#op0").text(result.g0);
-                        $("#op1").text(result.g1);
-                        $("#op2").text(result.g2);
-                        $("#op3").text(result.g3);
-                    }
-                });
-            },
             $("#hintBox").hide(),
             $("#updateOK").hide(),
             $("#updateFail").hide()
         );
+        
+        function setTarget() {
+            var targetName = $("#targetF").val();
+            var targetAmount = $("#targetAmountF").val();
+            
+            if (!targetName || !targetAmount) {
+                $("#hintText").html("請輸入目標與金額");
+                $("#hintBox").show();
+            }
+            else if (targetAmount < 1) {
+                $('#targetAmountU').val("");
+                $("#hintText").html("金額有誤，提示：最低目標金額為1元");
+                $("#hintBox").show();
+            }
+            else {
+                $("#hintBox").hide();
+                $.ajax({
+                    url: "/setTarget",
+                    type: "POST",
+                    data: JSON.stringify({"targetName": targetName, "targetAmount": targetAmount}),
+                    dataType: "json",
+                    contentType : "application/json; charset=UTF-8'",
+                    success: function(result) {
+                        if (result == "NameTooLong") {
+                            $("#hintText").html("目標文字太長了，請縮減到24個中文字以內");
+                            $("#hintBox").show();
+                        }
+                        else if (result == "NotInt") {
+                            $("#hintText").html("金額格式有誤，提示：只能輸入正整數");
+                            $("#hintBox").show();
+                        }
+                        else if (result == "AmountNotValid") {
+                            $("#hintText").html("金額有誤，提示：最低目標金額為1元");
+                            $("#hintBox").show();
+                        }
+                        else if (result == true) {
+                            $("#hintBox").hide();
+                            $('#targetF').val("");
+                            $('#targetAmountF').val("");
+                            $("#updateOK").show().delay(3000).fadeOut();
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateTargetName() {
+            var targetName = $("#targetU").val();
+            if (!targetName) {
+                $("#hintText").html("請輸入目標");
+                $("#hintBox").show();
+            }
+            else {
+                $("#hintBox").hide();
+                $.ajax({
+                    url: "/updateTargetName",
+                    type: "POST",
+                    data: JSON.stringify({"targetName": targetName}),
+                    dataType: "json",
+                    contentType : "application/json; charset=UTF-8'",
+                    success: function(result) {
+                        if (result == true) {
+                            // get new target name
+                            $.ajax({
+                                url: "/getNewTargetName",
+                                type: "GET",
+                                dataType: "json",
+                                success: function(result) {
+                                    $("#hintTargetName").html(result);
+                                }
+                            });
+                            $('#targetU').val("");
+                            $("#updateOK").show().delay(3000).fadeOut();
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateTargetAmount() {
+            var targetAmount = $("#targetAmountU").val();
+            if (!targetAmount) {
+                $("#hintText").html("請輸入金額");
+                $("#hintBox").show();
+            }
+            else if (targetAmount < 1) {
+                $('#targetAmountU').val("");
+                $("#hintText").html("最低目標金額為1元");
+                $("#hintBox").show();
+            }
+            else {
+                $("#hintBox").hide();
+                $.ajax({
+                    url: "/updateTargetAmount",
+                    type: "POST",
+                    data: JSON.stringify({"targetAmount": targetAmount}),
+                    dataType: "json",
+                    contentType : "application/json; charset=UTF-8'",
+                    success: function(result) {
+                        if (result == true) {
+                            // get new target amount
+                            $.ajax({
+                                url: "/getNewTargetAmount",
+                                type: "GET",
+                                dataType: "json",
+                                success: function(result) {
+                                    $("#hintTargetAmount").html(result+"元");
+                                }
+                            });                            
+                            $('#targetAmountU').val("");
+                            $("#updateOK").show().delay(3000).fadeOut();
+                        }
+                    }
+                });
+            }
+        }
 
         function updateName() {
             var updateName = $("#updateName").val();
@@ -125,7 +246,7 @@
                                 data: JSON.stringify({"pass1": pass1}),
                                 dataType: "json",
                                 contentType : "application/json",
-                                success: function(result = true) {
+                                success: function() {
                                     $('#pass1').val("");
                                     $('#pass2').val("");
                                     $("#updateOK").show().delay(3000).fadeOut();

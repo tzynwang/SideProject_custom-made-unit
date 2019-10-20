@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    瀏覽||編輯
+{% endblock %}
+
+{% block main %}
+    <div class="alert alert-warning" role="alert" id="hintBox"><span id="hintText"></span></div>
+
+    <input class="form-control" type="date" name="start" id="start" onchange="setMin()">
+    至
+    <input class="form-control" type="date" name="end" id="end"> 
+    <button class="btn btn-primary" type="button" onclick="sendTime()">篩選</button>
+    <br>
+    <br>
+
+    <table class="table table-sm" id="result">
+        <th>id</th>
+        <th>組別</th>
+        <th>金額</th>
+        <th>備註</th>
+    </table>
+    
+    <script>
+        $(document).ready(
+            $("#hintBox").hide(),
+            $("#result").hide()
+        );
+        
+        function setMin() {
+            var selectedtime = $("#start").val();
+            $("#end").attr({
+                "min": selectedtime
+            });
+        }
+
+        function sendTime() {
+            var start = $("#start").val();
+            var end = $("#end").val();
+            if (!start || !end) {
+                $("#hintText").html("請選取日期範圍");
+                $("#hintBox").show();
+            }
+            else {
+                $.ajax({
+                    url: "/filter",
+                    type: "GET",
+                    data: {"start":start, "end":end},
+                    dataType: "json",
+                    success: function(result) {
+                        if(!result) {
+                            $("#hintText").html("此日期區間沒有記帳紀錄");
+                            $("#hintBox").show();
+                        }
+                        else {
+                            $("#hintBox").hide();
+                            $("#result").show();
+                            
+                            var tableBody = document.createElement('tbody');
+
+                            result.forEach(function(item, index, array){
+                                var row = document.createElement('tr');
+                                
+                                item.forEach(function(item, index, array){
+                                    var cell = document.createElement('td');
+                                    cell.setAttribute("id", item); // set id
+                                    cell.appendChild(document.createTextNode(item));
+                                    row.appendChild(cell);
+                                });
+                                tableBody.appendChild(row);
+                            });
+                            document.getElementById("result").appendChild(tableBody);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}
+
+<!--
+    {% for k, v in groupName %}
+    <label class="form-control"><input type="checkbox" name="{{k}}" value="{{k}}">{{v}}</label>
+    {% endfor %}
+-->
