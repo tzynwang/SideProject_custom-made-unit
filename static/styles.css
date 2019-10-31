@@ -1,9 +1,14 @@
 @import url(https://fonts.googleapis.com/earlyaccess/notosanstc.css);
 
+html
+{
+    font-family: 'Noto Sans TC', sans-serif !important;
+}
+
 nav .navbar-brand
 {
     font-size: large;
-    font-family: 'cwTeXYen', sans-serif;
+    font-family: 'Noto Sans TC', sans-serif;
 }
 
 main .form-control
@@ -38,4 +43,9 @@ main img
 body
 {
     background-color: rgb(189, 245, 189);
+}
+
+.modal-content
+{
+    font-family: 'Noto Sans TC', sans-serif;
 }
