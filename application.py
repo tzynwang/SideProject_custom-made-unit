@@ -1,3 +1,4 @@
+from collections import defaultdict
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
 from flask_mail import Mail, Message
@@ -203,7 +204,7 @@ def send_authenticate():
 def check_authenticate(token):
     key = URLSafeTimedSerializer('user-authenticate-key')
     try:
-        plaintext = key.loads(token, max_age=1800) #plaintext為註冊的email
+        plaintext = key.loads(token, max_age=1800)
     except SignatureExpired:
         return render_template("auth_0.html", status="token過期")
     except BadSignature:
@@ -300,8 +301,7 @@ def add():
         groupKey = request.form.get("group")
         amount = request.form.get("amount")
         notes = request.form.get("notes")        
-        dateStamp = int("".join((request.form.get("dateStamp")).split("-")))
-        #回傳的格式長"2019-10-16"，處理完變成"20191016"
+        dateStamp = int("".join((request.form.get("dateStamp")).split("-"))) # YYYY-MM-DD ==> YYYYMMDD
 
         if not groupKey or not amount or not dateStamp:
             return ApologyPage("記帳資料有缺","是否有漏填欄位？")
@@ -327,45 +327,81 @@ def add():
         return render_template("add.html", groupName=groupName)
 
 
-@app.route("/view", methods=["GET", "POST"])
+@app.route("/view")
 @LoginRequired
 def view():
-    #使用者選取時間區塊+點選組別
+    #display bill(s)
     userID = session.get("id")
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
     rows = connection.fetchall()
     row = rows[0]
-    groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
+    groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]} # for bill edit usage
 
     return render_template("view.html", groupName=groupName.items())
-
-    #點擊表格，可以直接修改記帳內容
     
     
-@app.route("/filter")
+@app.route("/filter", methods=["POST"])
 @LoginRequired
 def Filter():
     
     userID = session.get("id")
-    start =  int("".join((request.args.get("start")).split("-")))
-    end = int("".join((request.args.get("end")).split("-")))
+    
+    start =  int("".join((request.get_json()["start"]).split("-")))
+    end = int("".join((request.get_json()["end"]).split("-")))
 
-    connection.execute("SELECT id,groupkey,amount,notes FROM bills \
-                        WHERE (datestamp BETWEEN %s AND %s) AND userid = %s", (start,end,userID))
+    connection.execute("SELECT id,datestamp,groupkey,notes,amount FROM bills \
+                        WHERE (datestamp BETWEEN %s AND %s) AND userid = %s ORDER BY datestamp", (start,end,userID))
     rows = connection.fetchall()
+
+    connection.execute("SELECT g0,g1,g2,g3 FROM users WHERE id = %s",(userID,))
+    names = connection.fetchone()
+    nameRef = {"g0":names[0], "g1":names[1], "g2":names[2], "g3":names[3]}
 
     if not rows:
         return jsonify(False)
     else:
-        itemsList = []
+        bills = []
         for items in rows:
             tr = []
             for i in items:
-                tr.append(i)
-            itemsList.append(tr)
-        print(itemsList)
-        return jsonify(itemsList)
+                if i in nameRef:
+                    tr.append(nameRef[i])
+                else:
+                    tr.append(i)
+            bills.append(tr)
+        return jsonify(bills)
+
+
+@app.route("/billEdit", methods=["POST"])
+@LoginRequired
+def Edit():
+    toUpdate = request.get_json()["content"]
+    ID = toUpdate["id"]
     
+    for k,v in toUpdate.items():
+        if k == "ediDate":
+            newDate = int(v)
+            connection.execute("UPDATE bills SET datestamp = %s WHERE id = %s",(newDate,ID))
+            conn.commit()
+        if k == "ediGroup":
+            connection.execute("UPDATE bills SET groupkey = %s WHERE id = %s",(v,ID))
+            conn.commit()
+        if k == "ediNote":
+            connection.execute("UPDATE bills SET notes = %s WHERE id = %s",(v,ID))
+            conn.commit()
+        if k == "ediAmount":
+            connection.execute("UPDATE bills SET amount = %s WHERE id = %s",(v,ID))
+            conn.commit()
+    return jsonify(True)
+
+
+@app.route("/billDelete", methods=["POST"])
+@LoginRequired
+def Delete():
+    toDelete = request.get_json()["id"]
+    connection.execute("DELETE from bills WHERE id = %s", (toDelete,))
+    return jsonify(True)
+
 
 @app.route("/groupToName")
 @LoginRequired

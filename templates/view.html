@@ -5,81 +5,264 @@
 {% endblock %}
 
 {% block main %}
-    <div class="alert alert-warning" role="alert" id="hintBox"><span id="hintText"></span></div>
+    <div class="" role="alert" id="hintBox"><span id="hintText"></span></div>
 
-    <input class="form-control" type="date" name="start" id="start" onchange="setMin()">
-    至
-    <input class="form-control" type="date" name="end" id="end"> 
-    <button class="btn btn-primary" type="button" onclick="sendTime()">篩選</button>
+    <div id="search">
+        <input class="form-control" type="date" name="start" id="start" onchange="setMin()">
+        至
+        <input class="form-control" type="date" name="end" id="end"> 
+        <button class="btn btn-primary" type="button" onclick="sendTime()">篩選</button>
+    </div>
+    
     <br>
+    <div id="editForm">
+        <input class="form-control" type="date" id="ediDate">
+        <select class="form-control" id="ediGroup">
+            <option selected value="">組別</option>
+            {% for k, v in groupName %}
+            <option value="{{ k }}">{{ v }}</option>
+            {% endfor %}
+        </select>
+        <input class="form-control" type="text" id="ediNote" maxlength="32" size="32" 
+        placeholder="花費內容 (最多32中文字)" autocomplete="off">
+        <input class="form-control" type="number" id="ediAmount" min="1" style="width: 7em" 
+        placeholder="金額" autocomplete="off">
+        
+        <button class="btn btn-primary" id="toUpdate">修改</button>
+        <button class="btn btn-secondary" onclick="cancelEdit()">算了</button>
+        <i class="fas fa-trash-alt fa-lg" id="trashIcon" style="color:#6c757d"></i>
+    </div>
     <br>
 
     <table class="table table-sm" id="result">
-        <th>id</th>
-        <th>組別</th>
-        <th>金額</th>
-        <th>備註</th>
+        <thead>
+            <th scope="col" onclick="sort()">日期</th>
+            <th scope="col">組別</th>
+            <th scope="col">花費內容</th>
+            <th scope="col" onclick="sort()">金額</th>
+        </thead>
+        <tbody id="row"></tbody>
+        <tfoot id="subTotal"></tfoot>
     </table>
     
     <script>
         $(document).ready(
             $("#hintBox").hide(),
-            $("#result").hide()
+            $("#result").hide(),
+            $("#editForm").hide()
         );
-        
+
+        $("#trashIcon").click(function() {
+            var answer = confirm("確定要刪除這一行紀錄嗎?\n提醒：被刪掉的資料無法復原");
+            if (answer == true) {
+                // ajax send tr id to backend for delete
+                $.ajax({
+                    url: "/billDelete",
+                    type: "POST",
+                    data: JSON.stringify({"id": trID}),
+                    contentType: "application/json",
+                    success: function(result) {
+                        $("#"+trID).remove();
+                        trID = null;
+                    }
+                });
+            }
+        });
+
         function setMin() {
-            var selectedtime = $("#start").val();
+            $("#end").val("");
             $("#end").attr({
-                "min": selectedtime
+                "min": $("#start").val()
             });
         }
 
+        var tdName = ["null","ediDate","ediGroup","ediNote","ediAmount"];
         function sendTime() {
+            $("#result").val("");
             var start = $("#start").val();
             var end = $("#end").val();
             if (!start || !end) {
-                $("#hintText").html("請選取日期範圍");
+                $("#hintText").html("請設定查詢範圍");
+                $("#hintBox").attr("class","alert alert-info");
                 $("#hintBox").show();
             }
             else {
                 $.ajax({
                     url: "/filter",
-                    type: "GET",
-                    data: {"start":start, "end":end},
+                    type: "POST",
+                    data: JSON.stringify({"start":start, "end":end}),
                     dataType: "json",
+                    contentType: "application/json",
                     success: function(result) {
                         if(!result) {
                             $("#hintText").html("此日期區間沒有記帳紀錄");
+                            $("#hintBox").attr("class","alert alert-warning");
                             $("#hintBox").show();
                         }
                         else {
                             $("#hintBox").hide();
-                            $("#result").show();
-                            
-                            var tableBody = document.createElement('tbody');
+                            $("#row").empty();
+                            $("#subTotal").empty();
+                            $("#result").show();                           
+                            var billSum = 0;
 
-                            result.forEach(function(item, index, array){
+                            result.forEach(function(element) {
                                 var row = document.createElement('tr');
-                                
-                                item.forEach(function(item, index, array){
+                                row.setAttribute("id", element[0]); // set <tr> id
+                                billSum = billSum + element[4];
+                                for (i = 1; i < element.length; i++) {
                                     var cell = document.createElement('td');
-                                    cell.setAttribute("id", item); // set id
-                                    cell.appendChild(document.createTextNode(item));
+                                    cell.setAttribute("id", element[0]+tdName[i]); // set <td> id
+                                    cell.appendChild(document.createTextNode(element[i]));
                                     row.appendChild(cell);
-                                });
-                                tableBody.appendChild(row);
+                                }
+                                document.getElementById("row").appendChild(row);
                             });
-                            document.getElementById("result").appendChild(tableBody);
+                            
+                            var sumRow = document.createElement('tr'); // set tfoot
+                            
+                            var sumMerge = document.createElement('td');
+                            sumMerge.setAttribute("colspan", 3);
+                            sumMerge.setAttribute("align", "right");
+                            sumMerge.appendChild(document.createTextNode("小記："));
+                            sumRow.appendChild(sumMerge);
+                            
+                            var sumS = document.createElement('td');
+                            sumS.setAttribute("id", "sum");
+                            sumS.appendChild(document.createTextNode(billSum));
+                            sumRow.appendChild(sumS);
+                            
+                            document.getElementById("subTotal").appendChild(sumRow);
                         }
                     }
                 });
             }
         }
+
+        $("#ediAmount").change(function() {
+            var amount = $("#ediAmount").val();
+            if (!amount) {
+                $("#toUpdate").removeAttr("disabled");
+            }
+            else if (amount < 1) {
+                alert("最低記帳金額為1元");
+                $("#toUpdate").attr("disabled","disabled");
+            }
+            else {
+                $("#toUpdate").removeAttr("disabled");
+            }
+        });
+
+        $("#trashIcon").hover(
+            function() {
+                $(this).css("color","#dc3545");},
+            function() {
+                $(this).css("color","#6c757d");}
+        );
+
+        function sort() {
+            // TODO
+        }
+
+        var trID = null;
+        $("tbody").on("click", "tr", function() { 
+            // if another row is clicked
+            if (trID && this.id != trID) {
+                var newID = this.id;
+                $("#"+trID).css("background-color", "transparent");
+                $("#"+newID).css("background-color", "#ffdf80");
+                $("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
+                $("#toUpdate").click(newID, function(){
+                    recordEdit(newID);
+                });
+                trID = newID;
+            }
+
+            trID = this.id;
+            $("#"+this.id).css("background-color", "#ffdf80");
+            $("#editForm").show("slow");
+            $("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
+            $("#toUpdate").click(trID, function(){
+                recordEdit(trID);
+            });
+        });
+
+        function recordEdit(rowID) {
+            var editItem = {}; // contain the info that should POST to application.py
+
+            // collect <div id="editForm"> data
+            $("input[id^='edi'], select[id^='edi']").each(function() {
+                var key = $(this).attr('id');
+                var value = $(this).val();
+                
+                if (key == "ediDate" && value) {
+                    editItem[key] = value.replace(/-/g,"");
+                }
+                else if (value) {
+                    editItem[key] = value;
+                }
+            });
+
+            if ($.isEmptyObject(editItem)) {
+                $("#hintText").html("請填入至少一個修改內容，或按下「算了」取消修改");
+                $("#hintBox").attr("class","alert alert-info");
+                $("#hintBox").show();
+            }
+            else {
+                editItem["id"] = rowID;
+                $("#hintBox").hide();
+                $("*[id^='edi']").each(function() {
+                    $(this).val("");
+                });
+
+                $.ajax({
+                    url: "/billEdit",
+                    type: "POST",
+                    data: JSON.stringify({"content":editItem}),
+                    dataType: "json",
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(result) {
+                        if (result == true) {
+                            $("#hintText").html("更新成功");
+                            $("#hintBox").attr("class","alert alert-success");
+                            $("#hintBox").show().delay(1500).fadeOut();
+                            $("#"+rowID).css("background-color", "transparent");
+                        }
+                    }
+                });
+
+                // update tr display content(s)
+                $.each(editItem, function(key, value){
+                    if (key == "ediGroup") {
+                        var displayName = $("option[value="+value+"]").text();
+                        $("#"+rowID+key).text(displayName);
+                    }
+                    else {
+                        $("#"+rowID+key).text(value);
+                    }
+                });
+
+                // update sum cell in <tfoot>
+                var newSum = 0;
+                $("td[id$=ediAmount]").each(function() {
+                    newSum += Number($(this).text());
+                });
+                $("#sum").text(newSum);
+            }
+        }
+
+        // click outside to hide edit table
+        $(document).click(function(event) {
+            var x = $("tr, #editForm, #search, #dialog");
+            if (!x.is(event.target) && x.has(event.target).length === 0) {
+                cancelEdit();
+            }
+        });
+
+        function cancelEdit() {
+            $("#"+trID).css("background-color", "transparent");
+            $("#editForm").hide("slow");
+            $("#hintBox").hide();
+        }
     </script>
 {% endblock %}
-
-<!--
-    {% for k, v in groupName %}
-    <label class="form-control"><input type="checkbox" name="{{k}}" value="{{k}}">{{v}}</label>
-    {% endfor %}
--->

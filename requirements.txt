@@ -1,0 +1,9 @@
+Flask
+Flask-Session
+flask_mail
+itsdangerous
+email_validator
+requests
+werkzeug
+psycopg2
+Gunicorn

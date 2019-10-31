@@ -34,3 +34,8 @@ main img
     /* constrain images on small screens */
     max-width: 100%;
 }
+
+body
+{
+    background-color: rgb(189, 245, 189);
+}

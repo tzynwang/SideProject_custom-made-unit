@@ -75,7 +75,7 @@
                     type: "POST",
                     data: JSON.stringify({"targetName": targetName, "targetAmount": targetAmount}),
                     dataType: "json",
-                    contentType : "application/json; charset=UTF-8'",
+                    contentType: "application/json; charset=UTF-8'",
                     success: function(result) {
                         if (result == "NameTooLong") {
                             $("#hintText").html("目標文字太長了，請縮減到24個中文字以內");
@@ -188,7 +188,7 @@
                     contentType : "application/json; charset=UTF-8'",
                     success: function(result) {
                         if (result == true) {
-                            $("#updateOK").show().delay(3000).fadeOut();
+                            $("#updateOK").show().delay(1500).fadeOut();
                             $('#gNames').val("");
                             $("#updateName").val("");
                             $.ajax({
