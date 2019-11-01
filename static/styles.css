@@ -11,6 +11,12 @@ nav .navbar-brand
     font-family: 'Noto Sans TC', sans-serif;
 }
 
+.navbar-collapse
+{
+    font-size: medium;
+    font-family: 'Noto Sans TC', sans-serif;
+}
+
 main .form-control
 {
     /* center form controls */
@@ -45,7 +51,12 @@ body
     background-color: rgb(189, 245, 189);
 }
 
-.modal-content
+.modal-dialog
 {
     font-family: 'Noto Sans TC', sans-serif;
+}
+
+.modal-header
+{
+    display: none;
 }
