@@ -77,53 +77,6 @@
             </div>
         </div>
     </div>
-<<<<<<< HEAD
-    
-    <script>
-        $(document).ready(
-            $("#hintBox").hide(),
-            $("#result").hide(),
-            $("#editForm").hide()
-        );
-
-        function setMin() {
-            $("#end").val("");
-            $("#end").attr({
-                "min": $("#start").val()
-            });
-        }
-
-        var tdName = ["null","ediDate","ediGroup","ediNote","ediAmount"];
-        function sendTime() {
-            $("#result").val("");
-            var start = $("#start").val();
-            var end = $("#end").val();
-            if (!start || !end) {
-                $("#hintText").html("請設定查詢範圍");
-                $("#hintBox").attr("class","alert alert-info");
-                $("#hintBox").show();
-            }
-            else {
-                $.ajax({
-                    url: "/filter",
-                    type: "POST",
-                    data: JSON.stringify({"start":start, "end":end}),
-                    dataType: "json",
-                    contentType: "application/json",
-                    success: function(result) {
-                        if(!result) {
-                            $("#hintText").html("此日期區間沒有記帳紀錄");
-                            $("#hintBox").attr("class","alert alert-warning");
-                            $("#hintBox").show();
-                        }
-                        else {
-                            $("#hintBox").hide();
-                            $("#row").empty();
-                            $("#subTotal").empty();
-                            $("#result").show();                           
-                            var billSum = 0;
-=======
->>>>>>> 2c03be9b9ed71514a8c3915f149e7df35994ad0c
 
     {# group filter dialog box #}
     <div class="modal fade" id="groupInTable" tabindex="-1" role="dialog" aria-labelledby="groupFilterLabel" aria-hidden="true">
@@ -152,27 +105,7 @@
     
     <script src="/static/view-js.js?version=14"></script>
 
-<<<<<<< HEAD
-        $("#trashIcon").click(function() {
-            var answer = confirm("確定要刪除這一行紀錄嗎?\n提醒：被刪掉的資料無法復原");
-            if (answer == true) {
-                // ajax send tr id to backend for delete
-                $.ajax({
-                    url: "/billDelete",
-                    type: "POST",
-                    data: JSON.stringify({"id": trID}),
-                    contentType: "application/json",
-                    success: function(result) {
-                        $("#"+trID).remove();
-                        trID = null;
-                    }
-                });
-            }
-        });
-
-=======
     <script>
->>>>>>> 2c03be9b9ed71514a8c3915f149e7df35994ad0c
         function sort() {
             var table = $('#result');
             var tbody = $('#row');
