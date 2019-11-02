@@ -278,7 +278,12 @@ def index():
         dateEnd = int(str(NOW.year)+str(NOW.month)+str(32))
         connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", (userID,dateStart,dateEnd))
         row = connection.fetchone()
-        amount = row[0]
+        
+        # in case of no bill
+        if row[0] is None:
+            amount = 0
+        else:
+            amount = row[0]
         
         # get target-setting status
         connection.execute("SELECT COALESCE ((SELECT target from targets where userid = %s))", (userID,))
@@ -290,7 +295,6 @@ def index():
             return render_template("index.html", targetStatus=0, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
         else:
             return render_template("index.html", amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
-    #讓使用者選擇顯示某區段日期的花費
 
 
 @app.route("/add", methods=["GET", "POST"])

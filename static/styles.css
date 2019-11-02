@@ -1,18 +1,20 @@
 @import url(https://fonts.googleapis.com/earlyaccess/notosanstc.css);
 
-html
-{
+html {
     font-family: 'Noto Sans TC', sans-serif !important;
 }
 
-nav .navbar-brand
-{
+nav .navbar-brand {
     font-size: large;
     font-family: 'Noto Sans TC', sans-serif;
 }
 
-main .form-control
-{
+.navbar-collapse {
+    font-size: medium;
+    font-family: 'Noto Sans TC', sans-serif;
+}
+
+main .form-control {
     /* center form controls */
     display: inline-block;
 
@@ -20,8 +22,7 @@ main .form-control
     width: auto;
 }
 
-main
-{
+main {
     /* scroll horizontally as needed */
     overflow-x: auto;
 
@@ -29,23 +30,30 @@ main
     text-align: center;
 }
 
-.warning
-{
+.warning {
     color: red;
 }
 
-main img
-{
+main img {
     /* constrain images on small screens */
     max-width: 100%;
 }
 
-body
-{
+body {
     background-color: rgb(189, 245, 189);
 }
 
-.modal-content
-{
+.modal-dialog {
     font-family: 'Noto Sans TC', sans-serif;
+}
+
+.modal-header {
+    display: none;
+}
+
+footer {
+    font-size: xx-small;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
