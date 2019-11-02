@@ -47,17 +47,14 @@
     <table class="table table-sm" id="result">
         <thead>
             <th scope="col" onclick="sort()">日期</th>
-            <th scope="col">
-                組別
-                <i class="fas fa-filter fa-sm" id="filterIcon" style="color:#6c757d"
-                data-toggle="modal" data-target="#groupInTable" onclick="groupFilter()"></i>
-            </th>
+            <th scope="col">組別</th>
             <th scope="col">花費內容</th>
-            <th scope="col" onclick="sort()">金額</th>
+            <th scope="col">金額</th>
         </thead>
         <tbody id="row"></tbody>
         <tfoot id="subTotal"></tfoot>
     </table>
+    <input type="hidden" id="order" value="asc">
 
     {# delete row confirm dialog box #}
     <div class="modal fade" id="deleteConfirm" tabindex="-1" role="dialog" aria-labelledby="deleteRowLabel" aria-hidden="true">
@@ -101,91 +98,33 @@
             </div>
         </div>
     </div>
+
+    <footer>
+        Icons by <a href="https://fontawesome.com/">fontawesome.com</a> is licensed under <a href="https://fontawesome.com/license">CC BY 4.0</a>
+    </footer>
     
-    <script src="/static/view-js.js?version=3"></script>
+    <script src="/static/view-js.js?version=14"></script>
 
-    <script>              
-        var tdName = ["null","ediDate","ediGroup","ediNote","ediAmount"];
-        function sendTime() {
-            $("#result").val("");
-            var start = $("#start").val();
-            var end = $("#end").val();
+    <script>
+        function sort() {
+            var table = $('#result');
+            var tbody = $('#row');
+            tbody.find('tr').sort(function(a, b) {
+                if ($('#order').val() == 'asc') {
+                    return $('td:first', a).text().localeCompare($('td:first', b).text());
+                }
+                else {
+                    return $('td:first', b).text().localeCompare($('td:first', a).text());
+                }
+            }).appendTo(tbody);
 
-            var selected = [];
-            $("div[name='selectedGroup'] input:checked").each(function() {
-                selected.push($(this).val());
-            });
-
-            if (!start || !end) {
-                $("#hintText").html("請設定查詢範圍");
-                $("#hintBox").attr("class","alert alert-info");
-                $("#hintBox").show();
+            var sort_order = $('#order').val();
+            if (sort_order =="asc") {
+                $('#order').val("desc");
             }
-            else if ($.isEmptyObject(selected)) {
-                $("#hintText").html("請選擇至少一個帳目分組");
-                $("#hintBox").attr("class","alert alert-info");
-                $("#hintBox").show();
-            }
-            else {
-                // pull record(s) from server side
-                $.ajax({
-                    url: "/filter",
-                    type: "POST",
-                    data: JSON.stringify({"start":start, "end":end}),
-                    dataType: "json",
-                    contentType: "application/json",
-                    success: function(result) {
-                        if(!result) {
-                            $("#hintText").html("此日期區間沒有記帳紀錄");
-                            $("#hintBox").attr("class","alert alert-warning");
-                            $("#hintBox").show();
-                        }
-                        else {
-                            $("#hintBox").hide();
-                            $("#row").empty();
-                            $("#subTotal").empty();
-                            $("#result").show();                           
-                            var billSum = 0;
-
-                            // render table of record(s)
-                            result.forEach(function(element) {
-                                // element[2] == group, only render the bill with the selected group
-                                if ($.inArray(element[2],selected) != -1) {
-                                    var row = document.createElement('tr');
-                                    row.setAttribute("id", element[0]); // set <tr> id
-                                    billSum = billSum + element[4];
-                                    for (i = 1; i < element.length; i++) {
-                                        var cell = document.createElement('td');
-                                        cell.setAttribute("id", element[0]+tdName[i]); // set <td> id
-                                        cell.appendChild(document.createTextNode(element[i]));
-                                        row.appendChild(cell);
-                                    }
-                                    document.getElementById("row").appendChild(row);
-                                }
-                            });
-                            
-                            var sumRow = document.createElement('tr'); // set tfoot
-                            
-                            var sumMerge = document.createElement('td');
-                            sumMerge.setAttribute("colspan", 3);
-                            sumMerge.setAttribute("align", "right");
-                            sumMerge.appendChild(document.createTextNode("小記："));
-                            sumRow.appendChild(sumMerge);
-                            
-                            var sumS = document.createElement('td');
-                            sumS.setAttribute("id", "sum");
-                            sumS.appendChild(document.createTextNode(billSum));
-                            sumRow.appendChild(sumS);
-                            
-                            document.getElementById("subTotal").appendChild(sumRow);
-                        }
-                    }
-                });
+            if (sort_order =="desc") {
+                $('#order').val("asc");
             }
         }
-        
-        function sort() {
-            // TODO
-        }      
     </script>
 {% endblock %}
