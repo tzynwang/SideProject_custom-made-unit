@@ -11,6 +11,85 @@ function setMin() {
 	});
 }
 
+var tdName = ["null","ediDate","ediGroup","ediNote","ediAmount"];
+function sendTime() {
+	$("#result").val("");
+	var start = $("#start").val();
+	var end = $("#end").val();
+
+	var selected = [];
+	$("div[name='selectedGroup'] input:checked").each(function() {
+		selected.push($(this).val());
+	});
+
+	if (!start || !end) {
+		$("#hintText").html("請設定查詢範圍");
+		$("#hintBox").attr("class","alert alert-info");
+		$("#hintBox").show();
+	}
+	else if ($.isEmptyObject(selected)) {
+		$("#hintText").html("請選擇至少一個帳目分組");
+		$("#hintBox").attr("class","alert alert-info");
+		$("#hintBox").show();
+	}
+	else {
+		// pull record(s) from server side
+		$.ajax({
+			url: "/filter",
+			type: "POST",
+			data: JSON.stringify({"start":start, "end":end}),
+			dataType: "json",
+			contentType: "application/json",
+			success: function(result) {
+				if(!result) {
+					$("#hintText").html("此日期區間沒有記帳紀錄");
+					$("#hintBox").attr("class","alert alert-warning");
+					$("#hintBox").show();
+				}
+				else {
+					$("#hintBox").hide();
+					$("#row").empty();
+					$("#subTotal").empty();
+					$("#result").show();                           
+					var billSum = 0;
+
+					// render table of record(s)
+					result.forEach(function(element) {
+						// element[2] == group, only render the bill with the selected group
+						if ($.inArray(element[2],selected) != -1) {
+							var row = document.createElement('tr');
+							row.setAttribute("id", element[0]); // set <tr> id
+							billSum = billSum + element[4];
+							for (i = 1; i < element.length; i++) {
+								var cell = document.createElement('td');
+								cell.setAttribute("id", element[0]+tdName[i]); // set <td> id
+								cell.appendChild(document.createTextNode(element[i]));
+								row.appendChild(cell);
+							}
+							document.getElementById("row").appendChild(row);
+						}
+					});
+					
+					var sumRow = document.createElement('tr'); // set tfoot
+					
+					var sumMerge = document.createElement('td');
+					sumMerge.setAttribute("colspan", 3);
+					sumMerge.setAttribute("align", "right");
+					sumMerge.appendChild(document.createTextNode("小記："));
+					sumRow.appendChild(sumMerge);
+					
+					var sumS = document.createElement('td');
+					sumS.setAttribute("id", "sum");
+					sumS.appendChild(document.createTextNode(billSum));
+					sumRow.appendChild(sumS);
+					
+					document.getElementById("subTotal").appendChild(sumRow);
+				}
+			}
+		});
+	}
+}
+
 $("#ediAmount").change(function() {
 	var amount = $("#ediAmount").val();
 	if (!amount) {
@@ -28,13 +107,6 @@ $("#ediAmount").change(function() {
 $("#trashIcon").hover(
 	function() {
 		$(this).css("color","#dc3545");},
-	function() {
-		$(this).css("color","#6c757d");}
-);
-
-$("#filterIcon").hover(
-	function() {
-		$(this).css("color","#007bff");},
 	function() {
 		$(this).css("color","#6c757d");}
 );
