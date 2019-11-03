@@ -52,7 +52,7 @@ def sendAuthMail(ID):
     subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
     message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
             + str(exY) + '/' + str(exMon) + '/' + str(exD) + ' ' + str(exh) + ':' + str(exmin) \
-            + '後過期<br>如果不巧這封信被打開時連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
+            + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
     msg = Message(
         subject = subject,
         recipients = [email],
@@ -180,7 +180,7 @@ def send_authenticate():
         subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
         message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
             + str(exY) + '/' + str(exMon) + '/' + str(exD) + ' ' + str(exh) + ':' + str(exmin) \
-            + '後過期<br>如果不巧這封信被打開時連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
+            + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
 
         msg = Message(
             subject = subject,
@@ -286,15 +286,16 @@ def index():
             amount = row[0]
         
         # get target-setting status
-        connection.execute("SELECT COALESCE ((SELECT target from targets where userid = %s))", (userID,))
+        connection.execute("SELECT targetunit,target,targetamount from targets where userid = %s", (userID,))
         row = connection.fetchone()
-        targetStatus = row[0]
         
-        # not yet set target
-        if not targetStatus: 
+        # no target/targetamount/targetunit info
+        if not row: 
             return render_template("index.html", targetStatus=0, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
         else:
-            return render_template("index.html", amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
+            t = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target info at front end
+            percentage = round(float(amount)/float(row[2]),2) # row[2]: targetamount
+            return render_template("index.html", targetStatus=1, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month), t=t, percentage=percentage)
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -556,22 +557,3 @@ def UpdatePass():
 def logout():
     session.clear()
     return redirect("/")
-
-
-@app.route("/table")
-def table():
-    userID = session.get("id")
-    NOW = datetime.now()
-    YYYY = NOW.year 
-    MM = NOW.month
-
-    connection.execute("SELECT * FROM bills WHERE userid = %s AND datey = %s AND datemo = %s ORDER BY \
-                        groupkey,dated,dateh,datemin,id", (userID,YYYY,MM))
-    bills = connection.fetchall() # display this year+month's bills
-
-    #把g0(等)替換成users table裡面對應的group name
-    connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    gNames = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
-
-    return render_template("test.html", bills=bills, gNames=gNames)
