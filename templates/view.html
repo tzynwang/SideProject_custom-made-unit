@@ -46,10 +46,16 @@
 
     <table class="table table-sm" id="result">
         <thead>
-            <th scope="col" onclick="sort()">日期</th>
+            <th scope="col" class="descend" id="sortDate" onclick="sortRow(0, 'sortDate')">
+                日期
+                <i class="fas fa-sort fa-sm"></i>
+            </th>
             <th scope="col">組別</th>
             <th scope="col">花費內容</th>
-            <th scope="col">金額</th>
+            <th scope="col" class="ascend" id="sortAmount" onclick="sortRow(3, 'sortAmount')">
+                金額
+                <i class="fas fa-sort fa-sm"></i>
+            </th>
         </thead>
         <tbody id="row"></tbody>
         <tfoot id="subTotal"></tfoot>
@@ -106,24 +112,29 @@
     <script src="/static/view-js.js?version=14"></script>
 
     <script>
-        function sort() {
-            var table = $('#result');
+        function sortRow(index, ID) {
             var tbody = $('#row');
-            tbody.find('tr').sort(function(a, b) {
-                if ($('#order').val() == 'asc') {
-                    return $('td:first', a).text().localeCompare($('td:first', b).text());
+
+            // find all row(s) in <tbody>, then sort()
+            tbody.find("tr").sort(function (a, b) {
+                if ($("#"+ID).hasClass("ascend") == true) {                    
+                    // get text of the children element with 'index'
+                    return parseInt($(a).children().eq(index).text()) - parseInt($(b).children().eq(index).text());
                 }
                 else {
-                    return $('td:first', b).text().localeCompare($('td:first', a).text());
+                    return parseInt($(b).children().eq(index).text()) - parseInt($(a).children().eq(index).text());
                 }
-            }).appendTo(tbody);
+            }).appendTo(tbody); // cut and paste to the end
 
-            var sort_order = $('#order').val();
-            if (sort_order =="asc") {
-                $('#order').val("desc");
+            $("#"+ID).attr("class");
+            $("#"+ID).children().attr("class");
+            if ($("#"+ID).hasClass("ascend") == true) {
+                $("#"+ID).attr("class", "descend");
+                $("#"+ID).children().attr("class", "fas fa-sort-up fa-sm");
             }
-            if (sort_order =="desc") {
-                $('#order').val("asc");
+            else {
+                $("#"+ID).attr("class", "ascend");
+                $("#"+ID).children().attr("class", "fas fa-sort-down fa-sm");
             }
         }
     </script>
