@@ -255,6 +255,20 @@ def login():
         return render_template("login.html")
 
 
+@app.route("/confStatus", methods=["POST"])
+@LoginRequired
+def ConfStatus():
+    userID = session.get("id")
+    connection.execute("SELECT COALESCE ((SELECT conf from users where id = %s))", (userID,))
+    row = connection.fetchone()   
+
+    if row[0] is None:
+        return jsonify(False)
+    else:
+        # the account is confirmed
+        return jsonify(True)
+    
+
 @app.route("/")
 @LoginRequired
 def index():
