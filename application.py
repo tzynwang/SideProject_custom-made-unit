@@ -111,8 +111,7 @@ def register():
 
 
 @app.route("/newUser")
-def isNew():
-    """for login.html"""
+def isNew(): #for login.html
     username = request.args.get("username")
     if NewUser(username) is True:
         return jsonify(True)
@@ -132,8 +131,7 @@ def validMail():
 
 
 @app.route("/checkUser")
-def checkUser():
-    """for register.html"""
+def checkUser(): #for register.html
     username = request.args.get("username")
     
     if NewUser(username) is False:
@@ -147,8 +145,7 @@ def checkUser():
 
 
 @app.route("/checkPass", methods=["POST"])
-def checkPass():
-    """for register.html"""
+def checkPass(): #for register.html
     pass1 = request.get_json()["pass1"]
     
     if CheckInput(pass1) is False:
@@ -353,10 +350,8 @@ def view():
     
 @app.route("/filter", methods=["POST"])
 @LoginRequired
-def Filter():
-    
+def Filter(): # for view.html
     userID = session.get("id")
-    
     start =  int("".join((request.get_json()["start"]).split("-")))
     end = int("".join((request.get_json()["end"]).split("-")))
 
@@ -414,24 +409,12 @@ def Delete():
     return jsonify(True)
 
 
-@app.route("/groupToName")
-@LoginRequired
-def ToName():
-    userID = session.get("id")
-    groupNo = str(request.args.get("groupNo"))
-    
-    connection.execute(f"SELECT {groupNo} FROM users WHERE id = {userID}")
-    row = connection.fetchone()
-    groupName = str(row[0])
-    return jsonify(groupName)
-
-
-@app.route("/setting") #右側
+@app.route("/setting") # nav-bar right-side
 @LoginRequired
 def Setting():
     userID = session.get("id")
 
-    """pull target status from db"""
+    #pull target status from db
     connection.execute("SELECT target,targetamount,targetunit from targets where userid = %s", (userID,))
     row = connection.fetchone()
 
@@ -439,7 +422,7 @@ def Setting():
     targetAmount = row[1]
     targetUnit = row[2]
     
-    """pull group names from db"""
+    #pull group names from db
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
     rows = connection.fetchall()
     row = rows[0]
@@ -472,15 +455,6 @@ def UpdateTargetName():
     
     row = connection.fetchone()
     return jsonify(row[0])
-
-
-@app.route("/getTarget")
-@LoginRequired
-def GetTarget():
-    userID = session.get("id")
-    connection.execute("SELECT target,targetunit,targetamount FROM targets WHERE userid = %s", (userID,))
-    row = connection.fetchone()
-    return jsonify(row)
 
 
 @app.route("/updateGroupName", methods=["POST"])

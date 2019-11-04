@@ -11,6 +11,32 @@ function setMin() {
 	});
 }
 
+function sortRow(index, ID) {
+	var tbody = $('#row');
+
+	// find all row(s) in <tbody>, then sort()
+	tbody.find("tr").sort(function (a, b) {
+		if ($("#"+ID).hasClass("ascend") == true) {                    
+			// get text of the children element with 'index'
+			return parseInt($(a).children().eq(index).text()) - parseInt($(b).children().eq(index).text());
+		}
+		else {
+			return parseInt($(b).children().eq(index).text()) - parseInt($(a).children().eq(index).text());
+		}
+	}).appendTo(tbody); // cut and paste to the end
+
+	$("#"+ID).attr("class");
+	$("#"+ID).children().attr("class");
+	if ($("#"+ID).hasClass("ascend") == true) {
+		$("#"+ID).attr("class", "descend");
+		$("#"+ID).children().attr("class", "fas fa-sort-up fa-sm");
+	}
+	else {
+		$("#"+ID).attr("class", "ascend");
+		$("#"+ID).children().attr("class", "fas fa-sort-down fa-sm");
+	}
+}
+
 var tdName = ["null","ediDate","ediGroup","ediNote","ediAmount"];
 function sendTime() {
 	$("#result").val("");
