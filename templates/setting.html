@@ -6,166 +6,110 @@
 
 {% block main %}
 
-    <div class="alert alert-success" role="alert" id="updateOK">已更新</div>
-    <div class="alert alert-warning" role="alert" id="hintBox"><span id="hintText"></span></div>
-    <div class="alert alert-danger" role="alert" id="updateFail">更新失敗</div>
+    <div class="" role="alert" id="hintBox">
+        <span id="hintText"></span>
+    </div>
 
-    {% if targetStatus == 0 %}
-    <label for="target">還未設定目標與金額：</label>
-    <input class="form-control" id="targetF" type="text" placeholder="設定目標(最多24中文字)" maxlength="24">
-    <input class="form-control" id="targetAmountF" type="number" placeholder="設定金額" min="1" style="width: 7em">
-    <button class="btn btn-primary" id="targetAmountButton" type="button" onclick="setTarget()">設定</button>
-    <hr>
-    {% else %}
-    <label for="target">目前目標：<span id="hintTargetName">{{ targetStatus }}</span></label> &&
-    <label for="targetAmount">目標金額：<span id="hintTargetAmount">{{ targetAmount }}元</span></label>
-    <br>
-    <input class="form-control" id="targetU" type="text" placeholder="更新目標(最多24中文字)" maxlength="24">
-    <button class="btn btn-primary" id="targetAmountButton" type="button" onclick="updateTargetName()">更新</button>
-     
-    <input class="form-control" id="targetAmountU" type="number" placeholder="更新金額" min="1" style="width: 7em">
-    <button class="btn btn-primary" id="targetAmountButton" type="button" onclick="updateTargetAmount()">更新</button>
-    <hr>
-    {% endif %}
-    
-    <label for="gNames">更新帳目分組名稱：</label>
-    <select class="form-control" id="gNames">
-        <option selected disabled value="">先選擇組別</option>
-        <option id="op0" value="g0">{{groupName[0]}}</option>
-        <option id="op1" value="g1">{{groupName[1]}}</option>
-        <option id="op2" value="g2">{{groupName[2]}}</option>
-        <option id="op3" value="g3">{{groupName[3]}}</option>
-    </select>
-    <input class="form-control" id="updateName" type="text" placeholder="再輸入自訂名稱" maxlength="24">
-    <button class="btn btn-primary" type="button" onclick="updateName()">更新</button>
-    <hr>
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td><label for="targetAmountSpan">金額</label></td>
+                <td><span id="targetAmountSpan">{{ targetAmount }}</span><span>元</span></td>
+                <td>
+                    <input class="form-control" name="targetGroup" id="targetAmount" type="number" 
+                    placeholder="最少為1元" min="1">
+                </td>
+                <td>
+                    <button class="btn btn-primary" type="button" onclick="updateTargets('targetAmount')">更新</button>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="targetSpan">代表金額的目標</label></td>
+                <td><span id="targetSpan">{{ target }}</span></td>
+                <td>
+                    <input class="form-control" name="targetGroup" id="target" type="text" 
+                    placeholder="例子：iPad" maxlength="24">
+                </td>
+                <td>
+                    <button class="btn btn-primary" type="button" onclick="updateTargets('target')">更新</button>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="targetUnitSpan">目標的單位</label></td>
+                <td><span id="targetUnitSpan">{{ targetUnit }}</span></td>
+                <td>
+                    <input class="form-control" name="targetGroup" id="targetUnit" type="text" 
+                    placeholder="例子：臺" maxlength="8">
+                </td>
+                <td>
+                    <button class="btn btn-primary" type="button" onclick="updateTargets('targetUnit')">更新</button>
+                </td>
+            </tr>
 
-    <lable for="pass1">更新密碼：</lable>
-    <input class="form-control" type="password" autocomplete="off" name="password" id="pass1" placeholder="密碼">
-    <input class="form-control" type="password" autocomplete="off" name="confirmation" id="pass2" placeholder="確認密碼">
-    <button class="btn btn-primary" type="button" onclick="updatePass()">更新</button>
-    <br>
-    <small>長度限制8-24字，至少包含1個英文與1個數字</small>
-    
+            <tr>
+                <td><label for="gNames">更新帳目分組名稱</label></td>
+                <td>
+                    <select class="form-control" id="gNames">
+                        <option selected disabled value="">先選擇組別</option>
+                        <option id="op0" value="g0">{{ groupName[0] }}</option>
+                        <option id="op1" value="g1">{{ groupName[1] }}</option>
+                        <option id="op2" value="g2">{{ groupName[2] }}</option>
+                        <option id="op3" value="g3">{{ groupName[3] }}</option>
+                    </select>
+                </td>
+                <td><input class="form-control" id="updateName" type="text" placeholder="再輸入自訂名稱" maxlength="24"></td>
+                <td><button class="btn btn-primary" type="button" onclick="updateName()">更新</button></td>
+            </tr>
+
+            <tr>
+                <td>
+                    <lable for="pass1">更新密碼</lable><br>
+                </td>
+                <td>
+                    <input class="form-control" type="password" autocomplete="off" name="password" id="pass1" 
+                    placeholder="密碼 (長度限制8-24字)">
+                </td>
+                <td>
+                    <input class="form-control" type="password" autocomplete="off" name="confirmation" id="pass2" 
+                    placeholder="確認 (數字英文各1)">
+                </td>
+                <td><button class="btn btn-primary" type="button" onclick="updatePass()">更新</button></td>
+            </tr>
+        </tbody>
+    </table>
 
     <script>        
         $(document).ready(
-            $("#hintBox").hide(),
-            $("#updateOK").hide(),
-            $("#updateFail").hide()
+            $("#hintBox").hide()
         );
-        
-        function setTarget() {
-            var targetName = $("#targetF").val();
-            var targetAmount = $("#targetAmountF").val();
-            
-            if (!targetName || !targetAmount) {
-                $("#hintText").html("請輸入目標與金額");
-                $("#hintBox").show();
-            }
-            else if (targetAmount < 1) {
-                $('#targetAmountU').val("");
-                $("#hintText").html("金額有誤，提示：最低目標金額為1元");
-                $("#hintBox").show();
-            }
-            else {
-                $("#hintBox").hide();
-                $.ajax({
-                    url: "/setTarget",
-                    type: "POST",
-                    data: JSON.stringify({"targetName": targetName, "targetAmount": targetAmount}),
-                    dataType: "json",
-                    contentType: "application/json; charset=UTF-8'",
-                    success: function(result) {
-                        if (result == "NameTooLong") {
-                            $("#hintText").html("目標文字太長了，請縮減到24個中文字以內");
-                            $("#hintBox").show();
-                        }
-                        else if (result == "NotInt") {
-                            $("#hintText").html("金額格式有誤，提示：只能輸入正整數");
-                            $("#hintBox").show();
-                        }
-                        else if (result == "AmountNotValid") {
-                            $("#hintText").html("金額有誤，提示：最低目標金額為1元");
-                            $("#hintBox").show();
-                        }
-                        else if (result == true) {
-                            $("#hintBox").hide();
-                            $('#targetF').val("");
-                            $('#targetAmountF').val("");
-                            $("#updateOK").show().delay(3000).fadeOut();
-                        }
-                    }
-                });
-            }
-        }
 
-        function updateTargetName() {
-            var targetName = $("#targetU").val();
-            if (!targetName) {
-                $("#hintText").html("請輸入目標");
-                $("#hintBox").show();
+        function updateTargets(updateID) {
+            var t = $("#"+updateID).val();
+            if (!t) {
+                $("#hintBox").attr("class");
+                $("#hintBox").attr("class", "alert alert-warning").show();
+                $("#hintText").html("請輸入內容");
+            }
+            else if (updateID == 'targetAmount' && t < 1) {
+                $("#hintBox").attr("class");
+                $("#hintBox").attr("class", "alert alert-warning").show();
+                $("#hintText").html("目標金額至少為1");
             }
             else {
                 $("#hintBox").hide();
                 $.ajax({
-                    url: "/updateTargetName",
+                    url: "/updateTarget",
                     type: "POST",
-                    data: JSON.stringify({"targetName": targetName}),
+                    data: JSON.stringify({"tType": updateID, "content": t}),
                     dataType: "json",
                     contentType : "application/json; charset=UTF-8'",
-                    success: function(result) {
-                        if (result == true) {
-                            // get new target name
-                            $.ajax({
-                                url: "/getNewTargetName",
-                                type: "GET",
-                                dataType: "json",
-                                success: function(result) {
-                                    $("#hintTargetName").html(result);
-                                }
-                            });
-                            $('#targetU').val("");
-                            $("#updateOK").show().delay(3000).fadeOut();
-                        }
-                    }
-                });
-            }
-        }
-
-        function updateTargetAmount() {
-            var targetAmount = $("#targetAmountU").val();
-            if (!targetAmount) {
-                $("#hintText").html("請輸入金額");
-                $("#hintBox").show();
-            }
-            else if (targetAmount < 1) {
-                $('#targetAmountU').val("");
-                $("#hintText").html("最低目標金額為1元");
-                $("#hintBox").show();
-            }
-            else {
-                $("#hintBox").hide();
-                $.ajax({
-                    url: "/updateTargetAmount",
-                    type: "POST",
-                    data: JSON.stringify({"targetAmount": targetAmount}),
-                    dataType: "json",
-                    contentType : "application/json; charset=UTF-8'",
-                    success: function(result) {
-                        if (result == true) {
-                            // get new target amount
-                            $.ajax({
-                                url: "/getNewTargetAmount",
-                                type: "GET",
-                                dataType: "json",
-                                success: function(result) {
-                                    $("#hintTargetAmount").html(result+"元");
-                                }
-                            });                            
-                            $('#targetAmountU').val("");
-                            $("#updateOK").show().delay(3000).fadeOut();
-                        }
+                    success: function (result) {
+                        $("#hintBox").attr("class");
+                        $("#hintText").html("更新成功");
+                        $("#hintBox").attr("class", "alert alert-success").show().delay(3000).fadeOut();
+                        
+                        $("#"+updateID).val("");
+                        $("#"+updateID+"Span").html(result);
                     }
                 });
             }
@@ -176,10 +120,12 @@
             var selectGroup = $("#gNames").val();
 
             if (!updateName || !selectGroup) {
+                $("#hintBox").attr("class");
+                $("#hintBox").attr("class", "alert alert-warning").show();
                 $("#hintText").html("請選擇組別並輸入欲更新之名稱");
-                $("#hintBox").show();
             }
             else {
+                $("#hintBox").hide();
                 $.ajax({
                     url: "/updateGroupName",
                     type: "POST",
@@ -187,26 +133,23 @@
                     dataType: "json",
                     contentType : "application/json; charset=UTF-8'",
                     success: function(result) {
-                        if (result == true) {
-                            $("#updateOK").show().delay(1500).fadeOut();
-                            $('#gNames').val("");
+                        if (result == false) {
+                            $("#hintText").html("分組名稱更新失敗");
+                            $("#hintBox").attr("class");
+                            $("#hintBox").attr("class", "alert alert-danger").show().delay(3000).fadeOut();
+                        }
+                        else {                           
+                            $("#hintText").html("分組名稱更新成功");
+                            $("#hintBox").attr("class");
+                            $("#hintBox").attr("class", "alert alert-success").show().delay(3000).fadeOut();
+                            
+                            for (i = 0; i < 4; i ++) {
+                                $("#op"+i).text(result[i]);
+                            }
+                            
                             $("#updateName").val("");
-                            $.ajax({
-                                url: "/getGroupName",
-                                type: "GET",
-                                dataType: "json",
-                                success: function(result) {
-                                    $("#op0").text(result.g0);
-                                    $("#op1").text(result.g1);
-                                    $("#op2").text(result.g2);
-                                    $("#op3").text(result.g3);
-                                }
-                            });
-                        }
-                        else {
-                            $("#updateFail").show().delay(3000).fadeOut();
-                        }
-                    }
+                        }  
+                    },
                 });
             }
         }
@@ -215,14 +158,17 @@
             var pass1 = $('#pass1').val();
             var pass2 = $('#pass2').val();
             if (!pass1 || !pass2) {
-                $("#hintBox").show();
+                $("#hintBox").attr("class");
+                $("#hintBox").attr("class", "alert alert-success").show();
                 $("#hintText").html("請輸入密碼與確認密碼");
             }
             else if (pass1 != pass2) { 
-                $("#hintBox").show();
+                $("#hintBox").attr("class");
+                $("#hintBox").attr("class", "alert alert-success").show();
                 $("#hintText").html("密碼與確認密碼的內容不同");
             }
             else if (pass1 == pass2) {
+                $("#hintBox").hide();
                 $.ajax({
                     url: "/checkPass",
                     type: "POST",
@@ -231,11 +177,13 @@
                     contentType : "application/json",
                     success: function(result) {
                         if (result == "nameContFail") {
-                            $("#hintBox").show();
+                            $("#hintBox").attr("class");
+                            $("#hintBox").attr("class", "alert alert-success").show();
                             $("#hintText").html("密碼內容不符合規範");
                         }
                         if (result == "lenFail") {
-                            $("#hintBox").show();
+                            $("#hintBox").attr("class");
+                            $("#hintBox").attr("class", "alert alert-success").show();
                             $("#hintText").html("密碼長度不符合規範");
                         }
                         if (result == true) {
@@ -249,10 +197,15 @@
                                 success: function() {
                                     $('#pass1').val("");
                                     $('#pass2').val("");
-                                    $("#updateOK").show().delay(3000).fadeOut();
+                                    
+                                    $("#hintText").html("密碼更新成功");
+                                    $("#hintBox").attr("class");
+                                    $("#hintBox").attr("class", "alert alert-success").show().delay(3000).fadeOut();
                                 },
                                 error: function() {
-                                    $("#updateFail").show().delay(3000).fadeOut();
+                                    $("#hintText").html("密碼更新失敗");
+                                    $("#hintBox").attr("class");
+                                    $("#hintBox").attr("class", "alert alert-danger").show().delay(3000).fadeOut();
                                 }
                             });
                         }
