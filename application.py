@@ -93,10 +93,16 @@ def register():
             connection.execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)", 
                                 (username, hashpass, maddress))
             conn.commit()
+            
             # pack user information into session
             connection.execute("SELECT id FROM users WHERE username = %s", (username,))
             row = connection.fetchone()
             session["id"] = row[0]
+            
+            # insert target info (default all NULL) for this userid
+            connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
+            conn.commit()
+
             # send authenticate email
             if sendAuthMail(row[0]) == True:
                 return redirect(url_for('index'))
@@ -289,8 +295,8 @@ def index():
         connection.execute("SELECT targetunit,target,targetamount from targets where userid = %s", (userID,))
         row = connection.fetchone()
         
-        # no target/targetamount/targetunit info
-        if not row: 
+        # no targetamount info
+        if row[2] is None: 
             return render_template("index.html", targetStatus=0, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
         else:
             t = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target info at front end
@@ -426,17 +432,12 @@ def Setting():
     userID = session.get("id")
 
     """pull target status from db"""
-    connection.execute("SELECT COALESCE ((SELECT target from targets where userid = %s))", (userID,))
-    rows = connection.fetchone()
-    row = rows[0]
-    if not row: 
-        targetStatus = 0
-        targetAmount = 0
-    else:
-        connection.execute("SELECT target,targetamount from targets where userid = %s", (userID,))
-        rows = connection.fetchone()
-        targetStatus = rows[0]
-        targetAmount = rows[1]
+    connection.execute("SELECT target,targetamount,targetunit from targets where userid = %s", (userID,))
+    row = connection.fetchone()
+
+    target = row[0]
+    targetAmount = row[1]
+    targetUnit = row[2]
     
     """pull group names from db"""
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
@@ -444,85 +445,42 @@ def Setting():
     row = rows[0]
     groupName = [row[0], row[1], row[2], row[3]]
 
-    return render_template("setting.html", groupName=groupName, targetStatus=targetStatus, targetAmount=targetAmount)
+    return render_template("setting.html", groupName=groupName, target=target, targetAmount=targetAmount, targetUnit=targetUnit)
     
     #修改email
 
 
-@app.route("/setTarget", methods=["POST"])
-@LoginRequired
-def SetTarget():
-    userID = session.get("id")
-    
-    targetName = str(request.get_json()["targetName"])
-    targetAmount = request.get_json()["targetAmount"]
-
-    if len(targetName) > 24:
-        return jsonify("NameTooLong")
-    try:
-        amountInt = int(targetAmount)
-    except ValueError:
-        return jsonify("NotInt")
-    if amountInt < 1:
-        return jsonify("AmountNotValid")
-    
-    connection.execute("INSERT INTO targets (id,userid,target,targetamount) VALUES (DEFAULT,%s,%s,%s)", (userID,targetName,amountInt))
-    conn.commit()
-    return jsonify(True)
-
-
-@app.route("/updateTargetName", methods=["POST"])
+@app.route("/updateTarget", methods=["POST"])
 @LoginRequired
 def UpdateTargetName():
     userID = session.get("id")
-    targetName = str(request.get_json()["targetName"])
-
-    if len(targetName) > 0 and len(targetName) <= 24:
-        connection.execute("UPDATE targets SET target = %s WHERE userid = %s", (targetName,userID))
+    tType = request.get_json()["tType"]
+    tContent = request.get_json()["content"]
+    
+    if tType == "targetAmount":
+        connection.execute("UPDATE targets SET targetamount = %s WHERE userid = %s", (tContent,userID))
         conn.commit()
-        return jsonify(True)
-    else:
-        pass
-
-
-@app.route("/getNewTargetName")
-@LoginRequired
-def NewTargetName():
-    userID = session.get("id")
-    connection.execute("SELECT target FROM targets WHERE userid = %s", (userID,))
+        connection.execute("SELECT targetamount FROM targets WHERE userid = %s", (userID,))
+    if tType == "target":
+        connection.execute("UPDATE targets SET target = %s WHERE userid = %s", (tContent,userID))
+        conn.commit()
+        connection.execute("SELECT target FROM targets WHERE userid = %s", (userID,))
+    if tType == "targetUnit":
+        connection.execute("UPDATE targets SET targetunit = %s WHERE userid = %s", (tContent,userID))
+        conn.commit()
+        connection.execute("SELECT targetunit FROM targets WHERE userid = %s", (userID,))
+    
     row = connection.fetchone()
     return jsonify(row[0])
 
 
-@app.route("/getNewTargetAmount")
+@app.route("/getTarget")
 @LoginRequired
-def NewTargetAmount():
+def GetTarget():
     userID = session.get("id")
-    connection.execute("SELECT targetamount FROM targets WHERE userid = %s", (userID,))
+    connection.execute("SELECT target,targetunit,targetamount FROM targets WHERE userid = %s", (userID,))
     row = connection.fetchone()
-    return jsonify(row[0])
-
-
-@app.route("/updateTargetAmount", methods=["POST"])
-@LoginRequired
-def UpdateTargetAmount():
-    userID = session.get("id")
-    targetAmount = int(request.get_json()["targetAmount"])
-    connection.execute("UPDATE targets SET targetamount = %s WHERE userid = %s", (targetAmount,userID))
-    conn.commit()
-    return jsonify(True)
-
-
-@app.route("/getGroupName")
-@LoginRequired
-def GetGroupName():
-    userID = session.get("id")
-    connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    rows = connection.fetchall()
-    row = rows[0]
-    groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
-    jsonG = json.dumps(groupName)
-    return jsonG
+    return jsonify(row)
 
 
 @app.route("/updateGroupName", methods=["POST"])
@@ -537,7 +495,10 @@ def UpdateGroupName():
     else:
         connection.execute(f"UPDATE users SET {gNames} = %s WHERE id = %s", (updateName,userID))
         conn.commit()
-        return jsonify(True)
+        # get updated group name(s)
+        connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
+        row = connection.fetchone()
+        return jsonify(row)
 
 
 @app.route("/updatePass", methods=["POST"])
