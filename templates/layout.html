@@ -54,14 +54,12 @@
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session.id %}
                     <script>
-                        console.log("print for test"); //testcode
                         $.ajax({
                             url: "/confStatus",
                             type: "POST",
                             dataType: "json",
                             success: function (result) {
                                 if (result == true) {
-                                    console.log("print for test II"); //testcode
                                     $("#navbar").append('<ul class="navbar-nav mr-auto mt-2" id="ulLeft"></ul>');
                                     $("#ulLeft").append('<li class="nav-item"><a class="nav-link" href="/add">新增</a></li>');
                                     $("#ulLeft").append('<li class="nav-item"><a class="nav-link" href="/view">瀏覽||編輯</a></li>');
@@ -71,7 +69,6 @@
                                     $("#ulRight").append('<li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>');
                                 }
                                 else {
-                                    console.log("print for test III"); //testcode
                                     $("#navbar").append('<ul class="navbar-nav ml-auto mt-2" id="ulRight"></ul>');
                                     $("#ulRight").append('<li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>');
                                 }

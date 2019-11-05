@@ -5,10 +5,14 @@ $(document).ready(
 ); 
 
 function setMin() {
-	$("#end").val("");
-	$("#end").attr({
-		"min": $("#start").val()
-	});
+	var start = $("#start").val();
+	var end = $("#end").val();
+	if (start > end) {
+		$("#end").val("");
+		$("#end").attr({
+			"min": $("#start").val()
+		});
+	}
 }
 
 function sortRow(index, ID) {

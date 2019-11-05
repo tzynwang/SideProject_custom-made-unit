@@ -323,11 +323,17 @@ def add():
         groupKey = request.form.get("group")
         amount = request.form.get("amount")
         notes = request.form.get("notes")        
-        dateStamp = int("".join((request.form.get("dateStamp")).split("-"))) # YYYY-MM-DD ==> YYYYMMDD
+        dateStamp = request.form.get("dateStamp")
 
         if not groupKey or not amount or not dateStamp:
             return ApologyPage("記帳資料有缺","是否有漏填欄位？")
         
+        try:
+            # YYYY-MM-DD ==> YYYYMMDD
+            dateStamp = int("".join((request.form.get("dateStamp")).split("-")))
+        except AttributeError:
+            return ApologyPage("日期格式有誤","提示：請透過網頁日曆中選取日期")
+
         try:
             amountInt = int(amount)
         except ValueError:
@@ -420,6 +426,7 @@ def Edit():
 def Delete():
     toDelete = request.get_json()["id"]
     connection.execute("DELETE from bills WHERE id = %s", (toDelete,))
+    conn.commit()
     return jsonify(True)
 
 
