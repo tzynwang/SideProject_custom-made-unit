@@ -2,9 +2,9 @@ from collections import defaultdict
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
 from flask_mail import Mail, Message
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import conn, connection, LoginRequired, CheckInput, CheckLen, NewUser, ApologyPage, CheckMail, ToStar, Jump30
+from helpers import conn, connection, LoginRequired, CheckInput, CheckLen, NewUser, ApologyPage, CheckMail, ToStar
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from email_validator import validate_email, EmailNotValidError
 
@@ -40,18 +40,12 @@ def sendAuthMail(ID):
     URL = "http://127.0.0.1:5000/authenticate/" + token
 
     # token expired time
-    NOW = datetime.now()
-    expiredTime = Jump30(NOW.year, NOW.month, NOW.day, NOW.hour, NOW.minute)
-    exY = expiredTime["YYYY"]
-    exMon = expiredTime["MM"]
-    exD = expiredTime["DD"]
-    exh = expiredTime["hh"]
-    exmin = expiredTime["mm"]
+    expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
 
     # email contents:
     subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
     message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
-            + str(exY) + '/' + str(exMon) + '/' + str(exD) + ' ' + str(exh) + ':' + str(exmin) \
+            + expiredTime \
             + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
     msg = Message(
         subject = subject,
@@ -171,18 +165,12 @@ def send_authenticate():
         URL = "http://127.0.0.1:5000/authenticate/" + token
 
         # token expired time
-        NOW = datetime.now()
-        expiredTime = Jump30(NOW.year, NOW.month, NOW.day, NOW.hour, NOW.minute)
-        exY = expiredTime["YYYY"]
-        exMon = expiredTime["MM"]
-        exD = expiredTime["DD"]
-        exh = expiredTime["hh"]
-        exmin = expiredTime["mm"]
+        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
 
         # email contents:
         subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
         message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
-            + str(exY) + '/' + str(exMon) + '/' + str(exD) + ' ' + str(exh) + ':' + str(exmin) \
+            + expiredTime \
             + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
 
         msg = Message(
@@ -513,3 +501,8 @@ def UpdatePass():
 def logout():
     session.clear()
     return redirect("/")
+
+
+@app.route("/test")
+def Test():
+    return render_template("test.html")

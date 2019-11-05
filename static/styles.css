@@ -2,16 +2,29 @@
 
 html {
     font-family: 'Noto Sans TC', sans-serif !important;
+    font-weight: 100;
 }
 
 nav .navbar-brand {
     font-size: large;
     font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 300;
 }
 
-.navbar-collapse {
+.navbar-collapse, .nav {
     font-size: medium;
     font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 100;
+}
+
+.form-group, .form-control, .form-text, .btn {
+    font-size: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 100;
+}
+
+.form-text {
+    font-size: x-small;
 }
 
 main .form-control {
@@ -30,6 +43,11 @@ main {
     text-align: center;
 }
 
+p, .p-mimic {
+    font-family: 'Noto Sans TC', sans-serif !important;
+    font-weight: 100;
+}
+
 .warning {
     color: red;
 }
@@ -45,10 +63,23 @@ body {
 
 .modal-dialog {
     font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 100;
 }
 
 .modal-header {
     display: none;
+}
+
+.a-mimic {
+    color: #007bff;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+.a-mimic:hover {
+    color: #0056b3;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 #t-bottom-line { 

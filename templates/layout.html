@@ -37,7 +37,7 @@
         <link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet">
 
         <!--customize CSS-->
-        <link href="/static/styles.css?version=26" rel="stylesheet" type="text/css">
+        <link href="/static/styles.css?version=40" rel="stylesheet" type="text/css">
         
         <title>你與○○的距離：{% block title %}{% endblock %}</title>
     </head>
@@ -63,9 +63,9 @@
                                     $("#navbar").append('<ul class="navbar-nav mr-auto mt-2" id="ulLeft"></ul>');
                                     $("#ulLeft").append('<li class="nav-item"><a class="nav-link" href="/add">新增</a></li>');
                                     $("#ulLeft").append('<li class="nav-item"><a class="nav-link" href="/view">瀏覽||編輯</a></li>');
+                                    $("#ulLeft").append('<li class="nav-item"><a class="nav-link" href="/setting">設定</a></li>');
                                     
                                     $("#navbar").append('<ul class="navbar-nav ml-auto mt-2" id="ulRight"></ul>');
-                                    $("#ulRight").append('<li class="nav-item"><a class="nav-link" href="/setting">設定</a></li>');
                                     $("#ulRight").append('<li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>');
                                 }
                                 else {
@@ -76,9 +76,9 @@
                         });
                     </script>
                 {% else %}
-                    <ul class="navbar-nav ml-auto mt-2">
-                        <li class="nav-item"><a class="nav-link" href="/register">註冊</a></li>
+                    <ul class="navbar-nav mr-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href="/login">登入</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/register">註冊</a></li>
                     </ul>
                 {% endif %}
             </div>

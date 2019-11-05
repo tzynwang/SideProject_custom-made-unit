@@ -100,34 +100,6 @@ def CheckLeapYear(YYYY):
         return False
 
 
-def Jump30(YYYY, MM, DD, hh, mm):
-    if mm + 30 >=60:
-        mm -= 30
-        hh += 1
-        if hh == 24:
-            hh == 0
-            DD += 1
-            if DD > 31 and (MM == 1 or MM == 3 or MM == 5 or MM == 7 or MM == 8 or MM == 10):
-                MM += 1
-                return {"YYYY":YYYY, "MM":MM, "DD":1, "hh":hh, "mm":mm}
-            elif DD > 31 and MM == 12:
-                YYYY += 1
-                return {"YYYY":YYYY, "MM":1, "DD":1, "hh":hh, "mm":mm}
-            elif DD > 30 and (MM == 4 or MM == 6 or MM == 9 or MM == 11):
-                MM += 1
-                return {"YYYY":YYYY, "MM":MM, "DD":1, "hh":hh, "mm":mm}
-            elif DD >= 28 and MM == 2 and CheckLeapYear(YYYY) == False:
-                return {"YYYY":YYYY, "MM":3, "DD":1, "hh":hh, "mm":mm}
-            elif DD >= 28 and MM == 2 and CheckLeapYear(YYYY) == True:
-                return {"YYYY":YYYY, "MM":2, "DD":29, "hh":hh, "mm":mm}
-            elif DD >= 29 and MM == 2 and CheckLeapYear(YYYY) == True:
-                return {"YYYY":YYYY, "MM":3, "DD":1, "hh":hh, "mm":mm}
-        else:
-            return {"YYYY":YYYY, "MM":MM, "DD":DD, "hh":hh, "mm":mm}
-    else:
-        return {"YYYY":YYYY, "MM":MM, "DD":DD, "hh":hh, "mm":mm+30}
-
-
 def LoginRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

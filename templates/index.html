@@ -6,17 +6,24 @@
 
 {% block main %}
     {% if confStatus == 0 %}
-        帳號"{{username}}"還沒被啟動，請至{{email}}收信，點擊信中提供的網址來啟動帳號<br>
-        沒有收到認證信？請<a href="/gen_token">點此</a>來重新發送帳號認證信件<br>
+        <p>帳號"{{username}}"還沒被啟動，請至{{email}}收信，點擊信中提供的網址來啟動帳號</p>
+        <span id="AuthMail" class="p-mimic">沒有收到認證信？請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件</span>
         <br>
     {% elif targetStatus == 0 %}
-        還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定<br>
+        <p>還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定</p>
         <br>
     {% else %}
-        本月({{ YYYY }}/{{ MM }})累積消費金額為：{{ amount }}元<br>
-        大約是 {{ percentage }}
+        <span class="p-mimic">本月({{ YYYY }}/{{ MM }})累積消費金額為：{{ amount }}元，大約是 {{ percentage }}</span>
         {% for item in t %}
-            {{ item }}
+            <span class="p-mimic">{{ item }}</span>
         {% endfor %}
     {% endif %}
+
+    <script>
+        $("#sendAuthMail").on("click", function() {
+            $("#AuthMail").hide("fade");
+            $("#AuthMail").text("認證信已重新發送");
+            $("#AuthMail").show("fade");
+        });
+    </script>
 {% endblock %}
