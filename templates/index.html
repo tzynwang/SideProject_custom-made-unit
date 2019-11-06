@@ -12,11 +12,17 @@
     {% elif targetStatus == 0 %}
         <p>還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定</p>
         <br>
-    {% else %}
-        <span class="p-mimic">本月({{ YYYY }}/{{ MM }})累積消費金額為：{{ amount }}元，大約是 {{ percentage }}</span>
-        {% for item in t %}
+    {% else %}  
+    <span class="p-mimic">
+        <input class="form-control" type="month" id="calender">
+        <span id="current">(本月)</span>的累積消費金額為：<span id="monthBill">{{ amount }}</span>元
+    </span>
+
+    <span id="targets" class="p-mimic">，大約是 <span id="percentage">{{ percentage }}</span>
+        {% for item in targets %}
             <span class="p-mimic">{{ item }}</span>
         {% endfor %}
+    </span>
     {% endif %}
 
     <script>
@@ -24,6 +30,57 @@
             $("#AuthMail").hide("fade");
             $("#AuthMail").text("認證信已重新發送");
             $("#AuthMail").show("fade");
+        });
+
+        var thisMonth = null;
+        $(function() { // set calender time
+            var t = new Date();
+            var YYYY = t.getFullYear();
+            var MM = t.getMonth()+1; // getMonth() is zero-based
+            thisMonth = YYYY+"-"+MM;
+
+            $("#calender").attr({
+                value: thisMonth,
+                min: (YYYY-1)+"-"+MM,
+                max: thisMonth
+            });
+        });
+
+        $("#calender").on("change", function() {
+            var date = $("#calender").val();
+            
+            if (date == thisMonth) {
+                $("#current").text("(本月)");
+            }
+            else {
+                $("#current").text("");
+            }
+
+            if (date == "") {
+                $("#monthBill, #percentage").text("0");
+                $("#targets").hide();
+            }
+            if (date != "") {
+                $.ajax({
+                    url: "/queryMonthSum",
+                    type: "POST",
+                    data: JSON.stringify({"date": date}),
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function(result) {
+                        if (result["amount"] == 0) {
+                            //no bill(s) in this month
+                            $("#monthBill, #percentage").text("0");
+                            $("#targets").hide();
+                        }
+                        else {
+                            $("#targets").show();
+                            $("#monthBill").text(result["amount"]);
+                            $("#percentage").text(result["percentage"].toFixed(2));
+                        }
+                    }
+                });
+            }
         });
     </script>
 {% endblock %}

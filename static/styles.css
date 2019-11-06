@@ -61,7 +61,7 @@ body {
     background-color: rgb(189, 245, 189);
 }
 
-.modal-dialog {
+.modal-dialog, .table {
     font-family: 'Noto Sans TC', sans-serif;
     font-weight: 100;
 }

@@ -28,33 +28,6 @@ app.config['MAIL_USERNAME'] = 'custom.made.unit@gmail.com'
 app.config['MAIL_PASSWORD'] = 'unitmadecustoms'
 mail = Mail(app)
 
-def sendAuthMail(ID):
-    userID = ID
-    connection.execute("SELECT username, email FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    username = row[0]
-    email = row[1]
-
-    key = URLSafeTimedSerializer('user-authenticate-key')
-    token = key.dumps(email)
-    URL = "http://127.0.0.1:5000/authenticate/" + token
-
-    # token expired time
-    expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
-
-    # email contents:
-    subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
-    message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
-            + expiredTime \
-            + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
-    msg = Message(
-        subject = subject,
-        recipients = [email],
-        html = message
-    )
-    mail.send(msg)
-    return True
-
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -97,8 +70,31 @@ def register():
         conn.commit()
 
         # send authenticate email
-        if sendAuthMail(row[0]) == True:
-            return redirect(url_for('index'))
+        connection.execute("SELECT username, email FROM users WHERE id = %s", (row[0],))
+        row = connection.fetchone()
+        username = row[0]
+        email = row[1]
+
+        key = URLSafeTimedSerializer('user-authenticate-key')
+        token = key.dumps(email)
+        URL = "http://127.0.0.1:5000/authenticate/" + token
+
+        # token expired time
+        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
+
+        # email contents:
+        subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
+        message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
+                + expiredTime \
+                + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
+        msg = Message(
+            subject = subject,
+            recipients = [email],
+            html = message
+        )
+        mail.send(msg)
+
+        return redirect(url_for('index'))
 
 
 @app.route("/newUser")
@@ -240,7 +236,7 @@ def login():
 
 @app.route("/confStatus", methods=["POST"])
 @LoginRequired
-def ConfStatus():
+def confStatus():
     userID = session.get("id")
     connection.execute("SELECT COALESCE ((SELECT conf from users where id = %s))", (userID,))
     row = connection.fetchone()   
@@ -272,7 +268,7 @@ def index():
         starMail = str(starStr + "@" + domain)
         return render_template("index.html", confStatus=0, username=username, email=starMail)
     else:
-        # get accounting amount info
+        # get this month's bill(s) SUM
         NOW = datetime.now()
         dateStart = int(str(NOW.year)+str(NOW.month)+str(0)+str(0))
         dateEnd = int(str(NOW.year)+str(NOW.month)+str(32))
@@ -293,9 +289,29 @@ def index():
         if row[2] is None: 
             return render_template("index.html", targetStatus=0, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
         else:
-            t = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target info at front end
+            targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target info at front end
             percentage = round(float(amount)/float(row[2]),2) # row[2]: targetamount
-            return render_template("index.html", targetStatus=1, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month), t=t, percentage=percentage)
+            return render_template("index.html", targetStatus=1, amount=amount, targets=targets, percentage=percentage)
+            # amount為0的時候(當月沒有記帳紀錄) ==> 顯示「本月沒有記帳紀錄」
+
+
+@app.route("/queryMonthSum", methods=["POST"])
+@LoginRequired
+def MonthSum():
+    userID = session.get("id")
+    dateStart = int("".join(request.get_json()["date"].split("-"))+str(0)+str(0))
+    dateEnd = int("".join(request.get_json()["date"].split("-"))+str(32))
+    connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", (userID,dateStart,dateEnd))
+    row = connection.fetchone()
+    
+    if row[0] is None: # no bill record
+        result = {"amount": 0, "percentage": 0}
+        return jsonify(result)
+    else:
+        connection.execute("SELECT targetamount FROM targets WHERE userid = %s", (userID,))
+        target = connection.fetchone()
+        result = {"amount": row[0], "percentage": (row[0]/target[0])}
+        return jsonify(result)
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -353,7 +369,7 @@ def view():
     
 @app.route("/filter", methods=["POST"])
 @LoginRequired
-def Filter(): # for view.html
+def filter(): # for view.html
     userID = session.get("id")
     start =  int("".join((request.get_json()["start"]).split("-")))
     end = int("".join((request.get_json()["end"]).split("-")))
@@ -383,7 +399,7 @@ def Filter(): # for view.html
 
 @app.route("/billEdit", methods=["POST"])
 @LoginRequired
-def Edit():
+def edit():
     toUpdate = request.get_json()["content"]
     ID = toUpdate["id"]
     
@@ -406,7 +422,7 @@ def Edit():
 
 @app.route("/billDelete", methods=["POST"])
 @LoginRequired
-def Delete():
+def delete():
     toDelete = request.get_json()["id"]
     connection.execute("DELETE from bills WHERE id = %s", (toDelete,))
     conn.commit()
@@ -415,7 +431,7 @@ def Delete():
 
 @app.route("/setting") # nav-bar right-side
 @LoginRequired
-def Setting():
+def setting():
     userID = session.get("id")
 
     #pull target status from db
@@ -439,7 +455,7 @@ def Setting():
 
 @app.route("/updateTarget", methods=["POST"])
 @LoginRequired
-def UpdateTargetName():
+def updateTargetName():
     userID = session.get("id")
     tType = request.get_json()["tType"]
     tContent = request.get_json()["content"]
@@ -463,7 +479,7 @@ def UpdateTargetName():
 
 @app.route("/updateGroupName", methods=["POST"])
 @LoginRequired
-def UpdateGroupName():
+def updateGroupName():
     userID = session.get("id")
     gNames = request.get_json()["gNames"]
     updateName = request.get_json()["updateName"]
@@ -481,7 +497,7 @@ def UpdateGroupName():
 
 @app.route("/updatePass", methods=["POST"])
 @LoginRequired
-def UpdatePass():
+def updatePass():
     userID = session.get("id")
     newPass = request.get_json()["pass1"]
     newHash = generate_password_hash(newPass)
@@ -499,5 +515,5 @@ def logout():
 
 
 @app.route("/welcome")
-def Welcome():
+def welcome():
     return render_template("welcome.html")
