@@ -56,52 +56,49 @@ def sendAuthMail(ID):
     return True
 
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/register", methods=["POST"])
 def register():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        confirmation = request.form.get("confirmation")
-        maddress = request.form.get("email")
+    username = request.form.get("username")
+    password = request.form.get("password")
+    confirmation = request.form.get("confirmation")
+    maddress = request.form.get("email")
 
-        if not username or not password or not confirmation or not maddress:
-            return ApologyPage("缺少註冊必要資訊","表格全部填寫了嗎？")
-        elif CheckInput(username) is False:
-            return ApologyPage("帳號組成內容不符合規範","8-16個字元，至少包含1英文字母、1數字")
-        elif CheckLen(username, 8, 16) is False:
-            return ApologyPage("帳號長度不符合規則","8-16個字元，至少包含1英文字母、1數字")
-        elif NewUser(username) is False:
-            return ApologyPage("這個帳號已經被註冊過了","請換一個")
-        elif CheckMail(maddress) == 0:
-            return ApologyPage("輸入的email無效","請檢查email拼字、或是換一個email")
-        elif CheckMail(maddress) == -1:
-            return ApologyPage("這個email已經被使用過了","請換一個email")
-        elif CheckInput(password) is False:
-            return ApologyPage("密碼組成內容不符合規範","8-24個字元，至少包含1英文字母、1數字")
-        elif CheckLen(password, 8, 24) is False:
-            return ApologyPage("密碼長度不符合規則","8-24個字元，至少包含1英文字母、1數字")
-        elif password != confirmation:
-            return ApologyPage("兩次輸入的密碼內容不同","請檢查")
-        else:
-            hashpass = generate_password_hash(password)
-            connection.execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)", 
-                                (username, hashpass, maddress))
-            conn.commit()
-            
-            # pack user information into session
-            connection.execute("SELECT id FROM users WHERE username = %s", (username,))
-            row = connection.fetchone()
-            session["id"] = row[0]
-            
-            # insert target info (default all NULL) for this userid
-            connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
-            conn.commit()
-
-            # send authenticate email
-            if sendAuthMail(row[0]) == True:
-                return redirect(url_for('index'))
+    if not username or not password or not confirmation or not maddress:
+        return ApologyPage("缺少註冊必要資訊","表格全部填寫了嗎？")
+    elif CheckInput(username) is False:
+        return ApologyPage("帳號組成內容不符合規範","8-16個字元，至少包含1英文字母、1數字")
+    elif CheckLen(username, 8, 16) is False:
+        return ApologyPage("帳號長度不符合規則","8-16個字元，至少包含1英文字母、1數字")
+    elif NewUser(username) is False:
+        return ApologyPage("這個帳號已經被註冊過了","請換一個")
+    elif CheckMail(maddress) == 0:
+        return ApologyPage("輸入的email無效","請檢查email拼字、或是換一個email")
+    elif CheckMail(maddress) == -1:
+        return ApologyPage("這個email已經被使用過了","請換一個email")
+    elif CheckInput(password) is False:
+        return ApologyPage("密碼組成內容不符合規範","8-24個字元，至少包含1英文字母、1數字")
+    elif CheckLen(password, 8, 24) is False:
+        return ApologyPage("密碼長度不符合規則","8-24個字元，至少包含1英文字母、1數字")
+    elif password != confirmation:
+        return ApologyPage("兩次輸入的密碼內容不同","請檢查")
     else:
-        return render_template("register.html")
+        hashpass = generate_password_hash(password)
+        connection.execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)", 
+                            (username, hashpass, maddress))
+        conn.commit()
+        
+        # pack user information into session
+        connection.execute("SELECT id FROM users WHERE username = %s", (username,))
+        row = connection.fetchone()
+        session["id"] = row[0]
+        
+        # insert target info (default all NULL) for this userid
+        connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
+        conn.commit()
+
+        # send authenticate email
+        if sendAuthMail(row[0]) == True:
+            return redirect(url_for('index'))
 
 
 @app.route("/newUser")
@@ -214,33 +211,31 @@ def check_authenticate(token):
         return redirect(url_for("index"))
 
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["POST"])
 def login():
     session.clear()
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+    username = request.form.get("username")
+    password = request.form.get("password")
+    
+    if not username or not password:
+        return ApologyPage("登入資訊不完整","請輸入帳號與密碼")
         
-        if not username or not password:
-            return ApologyPage("登入資訊不完整","請輸入帳號與密碼")
-            
-        if NewUser(username) is True:
-            return ApologyPage("查無此帳號","請先註冊")
-        
-        connection.execute("SELECT hash FROM users WHERE username = (%s)", (username,))
-        row = connection.fetchone()
-        dbPass = row[0]
-        
-        if check_password_hash(dbPass, password) is False:
-            return ApologyPage("密碼不正確","請檢查")
-        else:
-            connection.execute("SELECT id from users WHERE username = %s", (username,))
-            row = connection.fetchone()
-            # pack user information into session
-            session["id"] = row[0]
-            return redirect(url_for('index'))
+    if NewUser(username) is True:
+        return ApologyPage("查無此帳號","請先註冊")
+    
+    connection.execute("SELECT hash FROM users WHERE username = (%s)", (username,))
+    row = connection.fetchone()
+    dbPass = row[0]
+    
+    if check_password_hash(dbPass, password) is False:
+        return ApologyPage("密碼不正確","請檢查")
     else:
-        return render_template("login.html")
+        connection.execute("SELECT id from users WHERE username = %s", (username,))
+        row = connection.fetchone()
+        # pack user information into session
+        session["id"] = row[0]
+        return redirect(url_for('index'))
+
 
 
 @app.route("/confStatus", methods=["POST"])
@@ -503,6 +498,6 @@ def logout():
     return redirect("/")
 
 
-@app.route("/test")
-def Test():
-    return render_template("test.html")
+@app.route("/welcome")
+def Welcome():
+    return render_template("welcome.html")
