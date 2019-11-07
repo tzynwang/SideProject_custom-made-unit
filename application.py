@@ -1,15 +1,14 @@
-from collections import defaultdict
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
 from flask_mail import Mail, Message
 from datetime import date, datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import conn, connection, LoginRequired, CheckInput, CheckLen, NewUser, ApologyPage, CheckMail, ToStar
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from email_validator import validate_email, EmailNotValidError
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from email_validator import EmailNotValidError, validate_email
+from helpers import conn, connection, ApologyPage, CheckMail, CheckInput, CheckLen, LoginRequired, NewUser, ToStar
 
-import psycopg2
 import json
+import psycopg2
 
 app = Flask(__name__)
 
@@ -61,9 +60,10 @@ def register():
         conn.commit()
         
         # pack user information into session
-        connection.execute("SELECT id FROM users WHERE username = %s", (username,))
+        connection.execute("SELECT id,verified FROM users WHERE username = %s", (username,))
         row = connection.fetchone()
         session["id"] = row[0]
+        session["verified"] = row[1]
         
         # insert target info (default all NULL) for this userid
         connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
@@ -98,7 +98,7 @@ def register():
 
 
 @app.route("/newUser")
-def isNew(): #for login.html
+def newuser(): #for login.html
     username = request.args.get("username")
     if NewUser(username) is True:
         return jsonify(True)
@@ -107,7 +107,7 @@ def isNew(): #for login.html
 
 
 @app.route("/mailValidate")
-def validMail():
+def mailvalid():
     maddress = request.args.get("maddress")
     if CheckMail(maddress) == 1:
         return jsonify(True)
@@ -118,7 +118,7 @@ def validMail():
 
 
 @app.route("/checkUser")
-def checkUser(): #for register.html
+def checkuser(): #for register.html
     username = request.args.get("username")
     
     if NewUser(username) is False:
@@ -132,7 +132,7 @@ def checkUser(): #for register.html
 
 
 @app.route("/checkPass", methods=["POST"])
-def checkPass(): #for register.html
+def checkpass(): #for register.html
     pass1 = request.get_json()["pass1"]
     
     if CheckInput(pass1) is False:
@@ -144,15 +144,15 @@ def checkPass(): #for register.html
 
 
 @app.route("/gen_token")
-def send_authenticate():
+def token():
     userID = session.get("id")
-    connection.execute("SELECT username,email,conf FROM users WHERE id = %s", (userID,))
+    connection.execute("SELECT username,email,verified FROM users WHERE id = %s", (userID,))
     row = connection.fetchone()
     username = row[0]
     email = row[1]
-    confStatus = row[2]
+    status = row[2]
 
-    if confStatus != True:
+    if status != True:
         key = URLSafeTimedSerializer('user-authenticate-key')
         token = key.dumps(email)
         URL = "http://127.0.0.1:5000/authenticate/" + token
@@ -185,7 +185,7 @@ def send_authenticate():
 
 
 @app.route("/authenticate/<token>")
-def check_authenticate(token):
+def checktoken(token):
     key = URLSafeTimedSerializer('user-authenticate-key')
     try:
         plaintext = key.loads(token, max_age=1800)
@@ -202,7 +202,7 @@ def check_authenticate(token):
     if not row:
         return ApologyPage("user not exits", "this email doesn't exist in our database.")
     else:
-        connection.execute("UPDATE users SET conf = true WHERE email = %s", (plaintext,))
+        connection.execute("UPDATE users SET verified = true WHERE email = %s", (plaintext,))
         conn.commit()
         return redirect(url_for("index"))
 
@@ -226,19 +226,82 @@ def login():
     if check_password_hash(dbPass, password) is False:
         return ApologyPage("密碼不正確","請檢查")
     else:
-        connection.execute("SELECT id from users WHERE username = %s", (username,))
+        connection.execute("SELECT id,verified from users WHERE username = %s", (username,))
         row = connection.fetchone()
         # pack user information into session
         session["id"] = row[0]
+        session["verified"] = row[1]
         return redirect(url_for('index'))
 
+
+@app.route("/resetPass", methods=["POST"])
+def resetpass():
+    user = request.get_json()["user"]
+
+    if CheckMail(user) is 1:
+        # valid mailaddress but does not exist in db
+        return jsonify("not exist")
+    elif CheckMail(user) is -1:
+        # valid mailaddress and existed in db
+        connection.execute("SELECT username,email FROM users WHERE email = %s", (user,))
+        row = connection.fetchone()
+        username = row[0]
+        email = row[1]
+        
+        # send reset password email to this user
+        key = URLSafeTimedSerializer('user-authenticate-key')
+        token = key.dumps(username)
+        URL = "http://127.0.0.1:5000/resetPass/" + token
+        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 10))
+
+        subject = '[你與○○的距離||custom-made-unit] 重新設定密碼'
+        message = username + '你好，<br><br>請點選右側連結來重新設定密碼：' + URL + '<br>謝謝(´・ω・`)<br><br>提示：這個連結會在'\
+            + expiredTime \
+            + '後過期<br><br>如果這個帳號沒有更新密碼的需求，請忽略這封信，謝謝。'
+
+        msg = Message(
+            subject = subject,
+            recipients = [email],
+            html = message
+        )
+        mail.send(msg)
+        return jsonify("mail send")
+    else:
+        # search db find if username match user
+        if NewUser(user) is False:
+            # user existed, send reset email
+            connection.execute("SELECT username,email FROM users WHERE username = %s", (user,))
+            row = connection.fetchone()
+            username = row[0]
+            email = row[1]
+
+            key = URLSafeTimedSerializer('user-authenticate-key')
+            token = key.dumps(username)
+            URL = "http://127.0.0.1:5000/resetPass/" + token
+            expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 10))
+
+            subject = '[你與○○的距離||custom-made-unit] 重新設定密碼'
+            message = username + '你好，<br><br>請點選右側連結來重新設定密碼：' + URL + '<br>謝謝(´・ω・`)<br><br>提示：這個連結會在'\
+                + expiredTime \
+                + '後過期<br><br>如果這個帳號沒有更新密碼的需求，請忽略這封信，謝謝。'
+
+            msg = Message(
+                subject = subject,
+                recipients = [email],
+                html = message
+            )
+            mail.send(msg)
+            return jsonify("mail send")
+        else:
+            # user does not exist
+            return jsonify("not exist")
 
 
 @app.route("/confStatus", methods=["POST"])
 @LoginRequired
-def confStatus():
+def verify(): # for nav-bar
     userID = session.get("id")
-    connection.execute("SELECT COALESCE ((SELECT conf from users where id = %s))", (userID,))
+    connection.execute("SELECT COALESCE ((SELECT verified from users where id = %s))", (userID,))
     row = connection.fetchone()   
 
     if row[0] is None:
@@ -253,14 +316,14 @@ def confStatus():
 def index():
     userID = session.get("id")
     # account confirmation status check
-    connection.execute("SELECT conf,username,email FROM users WHERE id = %s", (userID,))
+    connection.execute("SELECT verified,username,email FROM users WHERE id = %s", (userID,))
     row = connection.fetchone()
-    confStatus = row[0]
+    status = row[0]
     username = row[1]
     email = row[2]
     
     # email not yet confirm
-    if confStatus != True: 
+    if status != True: 
         v = validate_email(email)
         mailLocal = str(v["local"])
         domain = str(v["domain"])
@@ -272,7 +335,8 @@ def index():
         NOW = datetime.now()
         dateStart = int(str(NOW.year)+str(NOW.month)+str(0)+str(0))
         dateEnd = int(str(NOW.year)+str(NOW.month)+str(32))
-        connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", (userID,dateStart,dateEnd))
+        connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", \
+                            (userID,dateStart,dateEnd))
         row = connection.fetchone()
         
         # in case of no bill
@@ -289,19 +353,20 @@ def index():
         if row[2] is None: 
             return render_template("index.html", targetStatus=0, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
         else:
-            targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target info at front end
-            percentage = round(float(amount)/float(row[2]),2) # row[2]: targetamount
+            targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target(s)
+            percentage = round(float(amount)/float(row[2]),2)
             return render_template("index.html", targetStatus=1, amount=amount, targets=targets, percentage=percentage)
             # amount為0的時候(當月沒有記帳紀錄) ==> 顯示「本月沒有記帳紀錄」
 
 
 @app.route("/queryMonthSum", methods=["POST"])
 @LoginRequired
-def MonthSum():
+def monthsum(): # for index.html
     userID = session.get("id")
     dateStart = int("".join(request.get_json()["date"].split("-"))+str(0)+str(0))
     dateEnd = int("".join(request.get_json()["date"].split("-"))+str(32))
-    connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", (userID,dateStart,dateEnd))
+    connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", \
+                        (userID,dateStart,dateEnd))
     row = connection.fetchone()
     
     if row[0] is None: # no bill record
@@ -348,8 +413,7 @@ def add():
         return redirect(url_for('index'))
     else:
         connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-        rows = connection.fetchall()
-        row = rows[0]
+        row = connection.fetchone()
         groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
         return render_template("add.html", groupName=groupName)
 
@@ -357,11 +421,9 @@ def add():
 @app.route("/view")
 @LoginRequired
 def view():
-    #display bill(s)
     userID = session.get("id")
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    rows = connection.fetchall()
-    row = rows[0]
+    row = connection.fetchone()
     groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]} # for bill edit usage
 
     return render_template("view.html", groupName=groupName.items())
@@ -379,8 +441,8 @@ def filter(): # for view.html
     rows = connection.fetchall()
 
     connection.execute("SELECT g0,g1,g2,g3 FROM users WHERE id = %s",(userID,))
-    names = connection.fetchone()
-    nameRef = {"g0":names[0], "g1":names[1], "g2":names[2], "g3":names[3]}
+    groupRow = connection.fetchone()
+    groupName = {"g0":groupRow[0], "g1":groupRow[1], "g2":groupRow[2], "g3":groupRow[3]}
 
     if not rows:
         return jsonify(False)
@@ -389,8 +451,8 @@ def filter(): # for view.html
         for items in rows:
             tr = []
             for i in items:
-                if i in nameRef:
-                    tr.append(nameRef[i])
+                if i in groupName:
+                    tr.append(groupName[i]) # append group name according to groupKey
                 else:
                     tr.append(i)
             bills.append(tr)
@@ -444,8 +506,7 @@ def setting():
     
     #pull group names from db
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    rows = connection.fetchall()
-    row = rows[0]
+    row = connection.fetchone()
     groupName = [row[0], row[1], row[2], row[3]]
 
     return render_template("setting.html", groupName=groupName, target=target, targetAmount=targetAmount, targetUnit=targetUnit)
@@ -455,7 +516,7 @@ def setting():
 
 @app.route("/updateTarget", methods=["POST"])
 @LoginRequired
-def updateTargetName():
+def updatetargets():
     userID = session.get("id")
     tType = request.get_json()["tType"]
     tContent = request.get_json()["content"]
@@ -479,7 +540,7 @@ def updateTargetName():
 
 @app.route("/updateGroupName", methods=["POST"])
 @LoginRequired
-def updateGroupName():
+def updategroup():
     userID = session.get("id")
     gNames = request.get_json()["gNames"]
     updateName = request.get_json()["updateName"]
@@ -491,13 +552,13 @@ def updateGroupName():
         conn.commit()
         # get updated group name(s)
         connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-        row = connection.fetchone()
-        return jsonify(row)
+        groupName = connection.fetchone()
+        return jsonify(groupName)
 
 
 @app.route("/updatePass", methods=["POST"])
 @LoginRequired
-def updatePass():
+def updatepass():
     userID = session.get("id")
     newPass = request.get_json()["pass1"]
     newHash = generate_password_hash(newPass)

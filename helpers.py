@@ -6,9 +6,7 @@ import urllib.parse
 
 from functools import wraps
 from flask import redirect, render_template, request, session
-from flask_mail import Mail, Message
 from flask_session import Session
-from datetime import datetime, timedelta
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from email_validator import validate_email, EmailNotValidError
 
@@ -47,9 +45,9 @@ def CheckLen(inputText, minimum, maximum):
 
 def NewUser(InputText):
     connection.execute("SELECT COALESCE ((SELECT username from users where username = %s))", (InputText,))
-    rows = connection.fetchone()
-    row = rows[0]
-    if not row:
+    row = connection.fetchone()
+    result = row[0]
+    if not result:
         return True
     else:
         return False
@@ -87,19 +85,6 @@ def ToStar(mailLocal):
     return starStr
 
 
-def CheckLeapYear(YYYY):
-    if YYYY%4 == 0:
-        if YYYY%100 == 0 and YYYY%400 != 0:
-            # not leap
-            return False
-        else:
-            # leap
-            return True
-    else:
-        # leap
-        return False
-
-
 def LoginRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -111,8 +96,7 @@ def LoginRequired(f):
 
 def GetGroupName(userID):
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    rows = connection.fetchall()
-    row = rows[0]
+    row = connection.fetchone()
     groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
     jsonG = json.dumps(groupName)
     return jsonG

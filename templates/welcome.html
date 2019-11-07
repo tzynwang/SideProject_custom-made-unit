@@ -23,13 +23,15 @@
             <form action="/login" method="post">
                 <div class="form-group">
                     <input autocomplete="off" autofocus class="form-control" name="username" id="usernameLogin" 
-                    placeholder="輸入使用者帳號" type="text" required onchange="checkUser()">
-                    <small class="form-text" id="hintLogin">查無帳號<span id="ID"></span>，<span class="a-mimic" id="goRegister">去註冊？</span></small>
+                    placeholder="輸入使用者帳號" type="text" minlength="8" maxlength="16" required>
+                    <small class="form-text" id="hintLogin">查無帳號"<span id="ID"></span>"，<span class="a-mimic" id="goRegister">去註冊？</span></small>
                 </div>
                 <div class="form-group">
-                    <input class="form-control" name="password" placeholder="輸入密碼" type="password" required>
+                    <input class="form-control" name="password" placeholder="輸入密碼" type="password" required
+                    minlength="8" maxlength="24">
                 </div>
                 <button class="btn btn-primary" type="submit" id="submitLogin">登入</button>
+                <button class="btn btn-secondary" type="button" id="passReset">忘記密碼</button>
             </form>
         </div>
         
@@ -40,14 +42,14 @@
             <form action="/register" method="post" id="registerForm">
                 <div class="form-group">
                     <input autofocus class="form-control" type="text" autocomplete="off" 
-                    name="username" id="username" placeholder="填入使用者名稱" required
-                    minlength="8" maxlength="16" onchange="validUsername()">
+                    name="username" id="usernameRegister" placeholder="填入使用者名稱" required
+                    minlength="8" maxlength="16">
                     <small class="form-text text-muted">長度限制8-16字，至少包含1個英文與1個數字</small>
                 </div>
                 
                 <div class="form-group">
                     <input class="form-control" type="email" autocomplete="off"
-                    name="email" id="email" placeholder="填入Email" required onchange="validMail()">
+                    name="email" id="email" placeholder="填入Email" required>
                     <small class="form-text text-muted">註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能</small>
                 </div>
         
@@ -72,20 +74,21 @@
     </div>
 
     <script>
-        $(document).ready(
-            $("#hintLogin").hide(), //login
-            $("#hintRegister").hide() //register
-            );
+        $(
+            $("#hintLogin").hide(), // login
+            $("#passReset").hide(), // reset password button
+            $("#hintRegister").hide() // register
+        );
 
-        $(document).ready(
-            $("#goRegister").on("click", function(){
+        $($("#goRegister").on("click", function() {
                 $("#register-tab").click();
             })
         );
 
-        //login
-        function checkUser() {
-            var username = $('#usernameLogin').val();
+        // login: verify username
+        $("#usernameLogin").on("change", function() {
+            $("#passReset").hide();
+            var username = $(this).val();
             $.ajax({
                 url: "/newUser",
                 type: "GET",
@@ -101,12 +104,74 @@
                     else {
                         $("#hintLogin").hide();
                         $("#submitLogin").attr("disabled", false);
+                        $("#passReset").show();
                     }
                 },
             });
-        }
+        });
 
-        //register
+        // register: verify username
+        $("#usernameRegister").blur(function() {
+            var username = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: "/checkUser",
+                data: {"username": username},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result){
+                    if (result == "nameContFail") {
+                        $("#hintRegister").show();
+                        $("#hintText").html("帳號內容不符合規範");
+                        $("#submitRegister").attr("disabled", true);
+                    }
+                    else if (result == "userExist") {
+                        $("#hintRegister").show();
+                        $("#hintText").html("這個帳號名稱已經有人使用過了，請換一個");
+                        $("#submitRegister").attr("disabled", true);
+                    }
+                    else if (result == "lenFail") {
+                        $("#hintRegister").show();
+                        $("#hintText").html("帳號長度不符合規範");
+                        $("#submitRegister").attr("disabled", true);
+                    }
+                    else {
+                        $("#hintRegister").hide();
+                        $("#submitRegister").attr("disabled", false);
+                    }
+                },
+            });
+        });
+
+        // register: verify email
+        $("#email").blur(function() {
+            var maddress = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: "/mailValidate",
+                data: {"maddress": maddress},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result) {
+                    if (result == "mailExist") {
+                        $("#hintRegister").show();
+                        $("#hintText").html("輸入的email已經被使用過了");
+                        $("#submitRegister").attr("disabled", true);
+                    }
+                    else if (result == "mailFail") {
+                        $("#hintRegister").show();
+                        $("#hintText").html("輸入的email無效，請檢查拼字、或是確認這個email的有效性");
+                        $("#submitRegister").attr("disabled", true);
+                    }
+                    else {
+                        $("#hintRegister").hide();
+                        $("#submitRegister").attr("disabled", false);
+                    }
+                },
+            });
+        });
+
+        // register: verify password
         $("#registerForm").submit(function(event){
             event.preventDefault();
             var pass1 = $("#pass1").val();
@@ -141,63 +206,13 @@
             }
         });
 
-        function validUsername() {
-            var username = $("#username").val();
-            $.ajax({
-                type: "GET",
-                url: "/checkUser",
-                data: {"username": username},
-                dataType: "json",
-                contentType : "application/json",
-                success: function(result){
-                    if (result == "nameContFail") {
-                        $("#hintRegister").show();
-                        $("#hintText").html("帳號內容不符合規範");
-                        $("#submitRegister").attr("disabled", true);
-                    }
-                    else if (result == "userExist") {
-                        $("#hintRegister").show();
-                        $("#hintText").html("這個帳號名稱已經有人使用過了，請換一個");
-                        $("#submitRegister").attr("disabled", true);
-                    }
-                    else if (result == "lenFail") {
-                        $("#hintRegister").show();
-                        $("#hintText").html("帳號長度不符合規範");
-                        $("#submitRegister").attr("disabled", true);
-                    }
-                    else {
-                        $("#hintRegister").hide();
-                        $("#submitRegister").attr("disabled", false);
-                    }
-                },
+        // Reset password
+        $("#passReset").on("click", function() {
+                var username = $("#usernameLogin").val();
+                // UI show dialog; with animate icon (e.g. circle) and hint text (e.g. sending a reset email to mail address xxx)
+                // ajax to backend
+                // ajax success, dialog show button
+                // press button to clean username input field and hide #passReset
             });
-        }
-
-        function validMail() {
-            var maddress = $("#email").val();
-            $.ajax({
-                type: "GET",
-                url: "/mailValidate",
-                data: {"maddress": maddress},
-                dataType: "json",
-                contentType : "application/json",
-                success: function(result) {
-                    if (result == "mailExist") {
-                        $("#hintRegister").show();
-                        $("#hintText").html("輸入的email已經被使用過了");
-                        $("#submitRegister").attr("disabled", true);
-                    }
-                    else if (result == "mailFail") {
-                        $("#hintRegister").show();
-                        $("#hintText").html("輸入的email無效，請檢查拼字、或是確認這個email的有效性");
-                        $("#submitRegister").attr("disabled", true);
-                    }
-                    else {
-                        $("#hintRegister").hide();
-                        $("#submitRegister").attr("disabled", false);
-                    }
-                },
-            });
-        }
     </script>
 {% endblock %}
