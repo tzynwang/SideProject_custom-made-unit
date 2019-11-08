@@ -20,18 +20,29 @@
     <div class="tab-content">
         {# login tab #}
         <div class="tab-pane fade show active" id="tabs-login" role="tabpanel" aria-labelledby="login-tab"><br>
+            {% if error %}
+            <div class="alert alert-warning" role="alert">
+                {% for e in error -%}
+                <span class="p-mimic">{{ e|safe }}</span>
+                {%- endfor %}
+            </div>
+            {% endif %}
             <form action="/login" method="post">
                 <div class="form-group">
-                    <input autocomplete="off" autofocus class="form-control" name="username" id="usernameLogin" 
-                    placeholder="輸入使用者帳號" type="text" minlength="8" maxlength="16" required>
-                    <small class="form-text" id="hintLogin">查無帳號"<span id="ID"></span>"，<span class="a-mimic" id="goRegister">去註冊？</span></small>
+                    <input autofocus class="form-control" type="text" autocomplete="off"
+                    name="username" id="usernameLogin" placeholder="輸入使用者帳號"
+                    minlength="8" maxlength="16" required>
+                    <small class="form-text" id="hintLogin">
+                        查無帳號"<span id="ID"></span>"，<span class="a-mimic" id="goRegister">去註冊？</span>
+                    </small>
                 </div>
                 <div class="form-group">
-                    <input class="form-control" name="password" placeholder="輸入密碼" type="password" required
-                    minlength="8" maxlength="24">
+                    <input class="form-control" type="password" autocomplete="off"
+                    name="password" placeholder="輸入密碼"
+                    minlength="8" maxlength="24" required>
                 </div>
                 <button class="btn btn-primary" type="submit" id="submitLogin">登入</button>
-                <button class="btn btn-secondary" type="button" id="passReset">忘記密碼</button>
+                <button class="btn btn-secondary" type="button" id="passReset" formaction="/resetPass">忘記密碼</button>
             </form>
         </div>
         
@@ -41,9 +52,9 @@
             
             <form action="/register" method="post" id="registerForm">
                 <div class="form-group">
-                    <input autofocus class="form-control" type="text" autocomplete="off" 
-                    name="username" id="usernameRegister" placeholder="填入使用者名稱" required
-                    minlength="8" maxlength="16">
+                    <input class="form-control" type="text" autocomplete="off" 
+                    name="username" id="usernameRegister" placeholder="填入使用者名稱"
+                    minlength="8" maxlength="16" required>
                     <small class="form-text text-muted">長度限制8-16字，至少包含1個英文與1個數字</small>
                 </div>
                 
@@ -55,12 +66,12 @@
         
                 <div class="form-group">
                     <input class="form-control" type="password" autocomplete="off" 
-                    name="password" id="pass1" placeholder="填入密碼" required minlength="8" maxlength="24">
+                    name="password" id="pass1" placeholder="填入密碼" minlength="8" maxlength="24" required>
                 </div>
                 
                 <div>
                     <input class="form-control" type="password" autocomplete="off" 
-                    name="confirmation" id="pass2" placeholder="確認密碼" required minlength="8" maxlength="24">
+                    name="confirmation" id="pass2" placeholder="確認密碼" minlength="8" maxlength="24" required>
                     <small class="form-text text-muted">長度限制8-24字，至少包含1個英文與1個數字</small>
                 </div>
         
@@ -205,14 +216,5 @@
                 $("#hintText").html("密碼與確認密碼的內容不同");
             }
         });
-
-        // Reset password
-        $("#passReset").on("click", function() {
-                var username = $("#usernameLogin").val();
-                // UI show dialog; with animate icon (e.g. circle) and hint text (e.g. sending a reset email to mail address xxx)
-                // ajax to backend
-                // ajax success, dialog show button
-                // press button to clean username input field and hide #passReset
-            });
     </script>
 {% endblock %}

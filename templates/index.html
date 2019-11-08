@@ -5,31 +5,29 @@
 {% endblock %}
 
 {% block main %}
-    {% if confStatus == 0 %}
-        <p>帳號"{{username}}"還沒被啟動，請至{{email}}收信，點擊信中提供的網址來啟動帳號</p>
+    {% if not session.verified %}
+        <p>帳號"{{ username }}"還沒被啟動，請至{{ email }}收信，點擊信中提供的網址來啟動帳號</p>
         <span id="AuthMail" class="p-mimic">沒有收到認證信？請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件</span>
-        <br>
-    {% elif targetStatus == 0 %}
-        <p>還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定</p>
-        <br>
-    {% else %}  
-    <span class="p-mimic">
-        <input class="form-control" type="month" id="calender">
-        <span id="current">(本月)</span>的累積消費金額為：<span id="monthBill">{{ amount }}</span>元
-    </span>
-
-    <span id="targets" class="p-mimic">，大約是 <span id="percentage">{{ percentage }}</span>
-        {% for item in targets %}
-            <span class="p-mimic">{{ item }}</span>
-        {% endfor %}
-    </span>
+    {% else %}
+        {% if not session.targetamount %}
+            <p>還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定</p>
+            <br>
+        {% else %}
+            <span class="p-mimic">
+                <input class="form-control" type="month" id="calender">
+                <span id="current">(本月)</span>的累積消費金額為：<span id="monthBill">{{ amount }}</span>元
+            </span>
+            <span id="targets" class="p-mimic">，大約是<span id="percentage">{{ percentage }}</span>
+                {% for item in targets -%}
+                    <span class="p-mimic">{{ item }}</span>
+                {%- endfor %}
+            </span>
+        {% endif %}
     {% endif %}
 
     <script>
         $("#sendAuthMail").on("click", function() {
-            $("#AuthMail").hide("fade");
-            $("#AuthMail").text("認證信已重新發送");
-            $("#AuthMail").show("fade");
+            $("#AuthMail").text("重新確認中……");
         });
 
         var thisMonth = null;

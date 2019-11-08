@@ -77,14 +77,14 @@ def register():
 
         key = URLSafeTimedSerializer('user-authenticate-key')
         token = key.dumps(email)
-        URL = "http://127.0.0.1:5000/authenticate/" + token
+        url = "http://127.0.0.1:5000/authenticate/" + token
 
         # token expired time
         expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
 
         # email contents:
         subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
-        message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
+        message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + url + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
                 + expiredTime \
                 + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
         msg = Message(
@@ -144,44 +144,39 @@ def checkpass(): #for register.html
 
 
 @app.route("/gen_token")
+@LoginRequired
 def token():
-    userID = session.get("id")
-    connection.execute("SELECT username,email,verified FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    username = row[0]
-    email = row[1]
-    status = row[2]
+    now = datetime.now().replace(microsecond=0)
+    last = session.get("last")
 
-    if status != True:
+    if last is None or (now-last).total_seconds() > 300:
+        userID = session.get("id")
+        connection.execute("SELECT username,email FROM users WHERE id = %s", (userID,))
+        row = connection.fetchone()
+
         key = URLSafeTimedSerializer('user-authenticate-key')
-        token = key.dumps(email)
-        URL = "http://127.0.0.1:5000/authenticate/" + token
+        token = key.dumps(row[1])
+        url = "http://127.0.0.1:5000/authenticate/" + token
 
         # token expired time
         expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
 
         # email contents:
         subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
-        message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + URL + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
+        message = row[0] + '你好，<br><br>請點選右側連結來啟動帳號：' + url + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
             + expiredTime \
             + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
 
         msg = Message(
             subject = subject,
-            recipients = [email],
+            recipients = [row[1]],
             html = message
         )
         mail.send(msg)
-
-        v = validate_email(email)
-        mailLocal = str(v["local"])
-        domain = str(v["domain"])
-        starStr = ToStar(mailLocal)
-        starMail = str(starStr + "@" + domain)
-
-        return render_template("index.html", confStatus=0, username=username, email=starMail)
+        session["last"] = now + timedelta(minutes = 5)
+        return redirect(url_for('index'))
     else:
-        return render_template("index.html")
+        return redirect(url_for('index'))
 
 
 @app.route("/authenticate/<token>")
@@ -214,17 +209,19 @@ def login():
     password = request.form.get("password")
     
     if not username or not password:
-        return ApologyPage("登入資訊不完整","請輸入帳號與密碼")
-        
-    if NewUser(username) is True:
-        return ApologyPage("查無此帳號","請先註冊")
+        error = ["登入資訊有短缺，請輸入帳號與密碼"]
+        return render_template("welcome.html", error=error)
+    elif NewUser(username) is True:
+        error = ["查無此帳號，請先註冊"]
+        return render_template("welcome.html", error=error)
     
     connection.execute("SELECT hash FROM users WHERE username = (%s)", (username,))
     row = connection.fetchone()
     dbPass = row[0]
     
     if check_password_hash(dbPass, password) is False:
-        return ApologyPage("密碼不正確","請檢查")
+        error = ["密碼不正確，", "<a href='/resetPass' class='alert-link'>重設密碼？</a>"]
+        return render_template("welcome.html", error=error)
     else:
         connection.execute("SELECT id,verified from users WHERE username = %s", (username,))
         row = connection.fetchone()
@@ -237,64 +234,7 @@ def login():
 @app.route("/resetPass", methods=["POST"])
 def resetpass():
     user = request.get_json()["user"]
-
-    if CheckMail(user) is 1:
-        # valid mailaddress but does not exist in db
-        return jsonify("not exist")
-    elif CheckMail(user) is -1:
-        # valid mailaddress and existed in db
-        connection.execute("SELECT username,email FROM users WHERE email = %s", (user,))
-        row = connection.fetchone()
-        username = row[0]
-        email = row[1]
-        
-        # send reset password email to this user
-        key = URLSafeTimedSerializer('user-authenticate-key')
-        token = key.dumps(username)
-        URL = "http://127.0.0.1:5000/resetPass/" + token
-        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 10))
-
-        subject = '[你與○○的距離||custom-made-unit] 重新設定密碼'
-        message = username + '你好，<br><br>請點選右側連結來重新設定密碼：' + URL + '<br>謝謝(´・ω・`)<br><br>提示：這個連結會在'\
-            + expiredTime \
-            + '後過期<br><br>如果這個帳號沒有更新密碼的需求，請忽略這封信，謝謝。'
-
-        msg = Message(
-            subject = subject,
-            recipients = [email],
-            html = message
-        )
-        mail.send(msg)
-        return jsonify("mail send")
-    else:
-        # search db find if username match user
-        if NewUser(user) is False:
-            # user existed, send reset email
-            connection.execute("SELECT username,email FROM users WHERE username = %s", (user,))
-            row = connection.fetchone()
-            username = row[0]
-            email = row[1]
-
-            key = URLSafeTimedSerializer('user-authenticate-key')
-            token = key.dumps(username)
-            URL = "http://127.0.0.1:5000/resetPass/" + token
-            expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 10))
-
-            subject = '[你與○○的距離||custom-made-unit] 重新設定密碼'
-            message = username + '你好，<br><br>請點選右側連結來重新設定密碼：' + URL + '<br>謝謝(´・ω・`)<br><br>提示：這個連結會在'\
-                + expiredTime \
-                + '後過期<br><br>如果這個帳號沒有更新密碼的需求，請忽略這封信，謝謝。'
-
-            msg = Message(
-                subject = subject,
-                recipients = [email],
-                html = message
-            )
-            mail.send(msg)
-            return jsonify("mail send")
-        else:
-            # user does not exist
-            return jsonify("not exist")
+    return True #TODO
 
 
 @app.route("/confStatus", methods=["POST"])
@@ -315,21 +255,14 @@ def verify(): # for nav-bar
 @LoginRequired
 def index():
     userID = session.get("id")
-    # account confirmation status check
-    connection.execute("SELECT verified,username,email FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    status = row[0]
-    username = row[1]
-    email = row[2]
-    
-    # email not yet confirm
-    if status != True: 
-        v = validate_email(email)
-        mailLocal = str(v["local"])
-        domain = str(v["domain"])
-        starStr = ToStar(mailLocal)
-        starMail = str(starStr + "@" + domain)
-        return render_template("index.html", confStatus=0, username=username, email=starMail)
+    verified = session.get("verified")
+
+    if not verified:
+        connection.execute("SELECT username,email FROM users WHERE id = %s", (userID,))
+        row = connection.fetchone()
+        email = validate_email(row[1])
+        starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
+        return render_template("index.html", username=row[0], email=starMail)
     else:
         # get this month's bill(s) SUM
         NOW = datetime.now()
@@ -350,12 +283,14 @@ def index():
         row = connection.fetchone()
         
         # no targetamount info
-        if row[2] is None: 
-            return render_template("index.html", targetStatus=0, amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
+        if row[2] is None:
+            session["targetamount"] = None
+            return render_template("index.html", amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
         else:
+            session["targetamount"] = True
             targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target(s)
             percentage = round(float(amount)/float(row[2]),2)
-            return render_template("index.html", targetStatus=1, amount=amount, targets=targets, percentage=percentage)
+            return render_template("index.html", amount=amount, targets=targets, percentage=percentage)
             # amount為0的時候(當月沒有記帳紀錄) ==> 顯示「本月沒有記帳紀錄」
 
 
@@ -577,4 +512,4 @@ def logout():
 
 @app.route("/welcome")
 def welcome():
-    return render_template("welcome.html")
+    return render_template("welcome.html", error=None)
