@@ -3,7 +3,7 @@ from flask_session import Session
 from flask_mail import Mail, Message
 from datetime import date, datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
 from email_validator import EmailNotValidError, validate_email
 from helpers import conn, connection, ApologyPage, CheckMail, CheckInput, CheckLen, LoginRequired, NewUser, ToStar
 
@@ -14,17 +14,17 @@ app = Flask(__name__)
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_DEFAULT_SENDER'] = ('custom-made-unit Official', 'custom.made.unit@gmail.com')
-app.config['MAIL_MAX_EMAILS'] = 10
-app.config['MAIL_USERNAME'] = 'custom.made.unit@gmail.com'
-app.config['MAIL_PASSWORD'] = 'unitmadecustoms'
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 465
+app.config["MAIL_USE_SSL"] = True
+app.config["MAIL_DEFAULT_SENDER"] = ("custom-made-unit Official", "custom.made.unit@gmail.com")
+app.config["MAIL_MAX_EMAILS"] = 10
+app.config["MAIL_USERNAME"] = "custom.made.unit@gmail.com"
+app.config["MAIL_PASSWORD"] = "rinyukarine"
 mail = Mail(app)
 
 
@@ -36,65 +36,67 @@ def register():
     maddress = request.form.get("email")
 
     if not username or not password or not confirmation or not maddress:
-        return ApologyPage("缺少註冊必要資訊","表格全部填寫了嗎？")
-    elif CheckInput(username) is False:
-        return ApologyPage("帳號組成內容不符合規範","8-16個字元，至少包含1英文字母、1數字")
-    elif CheckLen(username, 8, 16) is False:
-        return ApologyPage("帳號長度不符合規則","8-16個字元，至少包含1英文字母、1數字")
+        error = ["註冊資訊有短缺，請填完全部欄位。"]
+        return render_template("welcome.html", error=error)
+    elif CheckInput(username) is False or CheckLen(username, 8, 16) is False:
+        error = ["帳號不符合規範，","8-24個字元，至少包含1英文字母、1數字。"]
+        return render_template("welcome.html", error=error)
     elif NewUser(username) is False:
-        return ApologyPage("這個帳號已經被註冊過了","請換一個")
+        error = ["這個帳號已經被註冊過了，請換一個。"]
+        return render_template("welcome.html", error=error)
     elif CheckMail(maddress) == 0:
-        return ApologyPage("輸入的email無效","請檢查email拼字、或是換一個email")
+        error = ["輸入的email無效，","請檢查email拼字、或是換一個email。"]
+        return render_template("welcome.html", error=error)
     elif CheckMail(maddress) == -1:
-        return ApologyPage("這個email已經被使用過了","請換一個email")
-    elif CheckInput(password) is False:
-        return ApologyPage("密碼組成內容不符合規範","8-24個字元，至少包含1英文字母、1數字")
-    elif CheckLen(password, 8, 24) is False:
-        return ApologyPage("密碼長度不符合規則","8-24個字元，至少包含1英文字母、1數字")
+        error = ["這個email已經被使用過了，","請換一個email。"]
+        return render_template("welcome.html", error=error)
+    elif CheckInput(password) is False or CheckLen(password, 8, 24) is False:
+        error = ["密碼不符合規範，","8-24個字元，至少包含1英文字母、1數字。"]
+        return render_template("welcome.html", error=error)
     elif password != confirmation:
-        return ApologyPage("兩次輸入的密碼內容不同","請檢查")
-    else:
-        hashpass = generate_password_hash(password)
-        connection.execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)", 
-                            (username, hashpass, maddress))
-        conn.commit()
-        
-        # pack user information into session
-        connection.execute("SELECT id,verified FROM users WHERE username = %s", (username,))
-        row = connection.fetchone()
-        session["id"] = row[0]
-        session["verified"] = row[1]
-        
-        # insert target info (default all NULL) for this userid
-        connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
-        conn.commit()
+        error = ["兩次輸入的密碼內容不同，","請檢查。"]
+        return render_template("welcome.html", error=error)
+    
+    hashpass = generate_password_hash(password)
+    connection.execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)", 
+                        (username, hashpass, maddress))
+    conn.commit()
+    
+    connection.execute("SELECT id,verified FROM users WHERE username = %s", (username,))
+    row = connection.fetchone()
+    session["id"] = row[0]
+    session["verified"] = row[1]
+    
+    # insert target info (default all NULL) for this userid
+    connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
+    conn.commit()
 
-        # send authenticate email
-        connection.execute("SELECT username, email FROM users WHERE id = %s", (row[0],))
-        row = connection.fetchone()
-        username = row[0]
-        email = row[1]
+    # send authenticate email
+    connection.execute("SELECT username,email FROM users WHERE id = %s", (row[0],))
+    row = connection.fetchone()
+    username = row[0]
+    email = row[1]
 
-        key = URLSafeTimedSerializer('user-authenticate-key')
-        token = key.dumps(email)
-        url = "http://127.0.0.1:5000/authenticate/" + token
+    key = URLSafeTimedSerializer("user-authenticate-key")
+    token = key.dumps(email)
+    url = "http://127.0.0.1:5000/authenticate/" + token
 
-        # token expired time
-        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
+    # token expired time
+    expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
 
-        # email contents:
-        subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
-        message = username + '你好，<br><br>請點選右側連結來啟動帳號：' + url + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
-                + expiredTime \
-                + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
-        msg = Message(
-            subject = subject,
-            recipients = [email],
-            html = message
-        )
-        mail.send(msg)
+    # email contents:
+    subject = "[你與○○的距離||custom-made-unit] 新帳號認證"
+    message = username + "你好，<br><br>請點選右側連結來啟動帳號：" + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
+            + expiredTime \
+            + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href='http://127.0.0.1:5000/gen_token'>點此</a>來取得新的認證email"
+    msg = Message(
+        subject = subject,
+        recipients = [email],
+        html = message
+    )
+    mail.send(msg)
 
-        return redirect(url_for('index'))
+    return redirect(url_for("index"))
 
 
 @app.route("/newUser")
@@ -154,7 +156,7 @@ def token():
         connection.execute("SELECT username,email FROM users WHERE id = %s", (userID,))
         row = connection.fetchone()
 
-        key = URLSafeTimedSerializer('user-authenticate-key')
+        key = URLSafeTimedSerializer("user-authenticate-key")
         token = key.dumps(row[1])
         url = "http://127.0.0.1:5000/authenticate/" + token
 
@@ -162,10 +164,10 @@ def token():
         expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
 
         # email contents:
-        subject = '[你與○○的距離||custom-made-unit] 新帳號認證'
-        message = row[0] + '你好，<br><br>請點選右側連結來啟動帳號：' + url + '<br>謝謝(`・ω・´)<br><br>提示：這個連結會在'\
+        subject = "[你與○○的距離||custom-made-unit] 新帳號認證"
+        message = row[0] + "你好，<br><br>請點選右側連結來啟動帳號：" + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
             + expiredTime \
-            + '後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href="http://127.0.0.1:5000/gen_token">點此</a>來取得新的認證email'
+            + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href='http://127.0.0.1:5000/gen_token'>點此</a>來取得新的認證email"
 
         msg = Message(
             subject = subject,
@@ -174,14 +176,14 @@ def token():
         )
         mail.send(msg)
         session["last"] = now + timedelta(minutes = 5)
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
     else:
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
 
 @app.route("/authenticate/<token>")
 def checktoken(token):
-    key = URLSafeTimedSerializer('user-authenticate-key')
+    key = URLSafeTimedSerializer("user-authenticate-key")
     try:
         plaintext = key.loads(token, max_age=1800)
     except SignatureExpired:
@@ -209,10 +211,10 @@ def login():
     password = request.form.get("password")
     
     if not username or not password:
-        error = ["登入資訊有短缺，請輸入帳號與密碼"]
+        error = ["登入資訊有短缺，請輸入帳號與密碼。"]
         return render_template("welcome.html", error=error)
     elif NewUser(username) is True:
-        error = ["查無此帳號，請先註冊"]
+        error = ["查無此帳號，請先註冊。"]
         return render_template("welcome.html", error=error)
     
     connection.execute("SELECT hash FROM users WHERE username = (%s)", (username,))
@@ -220,7 +222,7 @@ def login():
     dbPass = row[0]
     
     if check_password_hash(dbPass, password) is False:
-        error = ["密碼不正確，", "<a href='/resetPass' class='alert-link'>重設密碼？</a>"]
+        error = ["密碼不正確，", "<a href='/reset' class='alert-link'>重設密碼？</a>"]
         return render_template("welcome.html", error=error)
     else:
         connection.execute("SELECT id,verified from users WHERE username = %s", (username,))
@@ -228,13 +230,83 @@ def login():
         # pack user information into session
         session["id"] = row[0]
         session["verified"] = row[1]
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
 
-@app.route("/resetPass", methods=["POST"])
-def resetpass():
-    user = request.get_json()["user"]
-    return True #TODO
+@app.route("/forget", methods=["POST"])
+def forget():
+    username = request.form.get("username")
+    
+    if not username:
+        error = ["請輸入帳號。"]
+        return render_template("welcome.html", error=error)
+    elif NewUser(username) is True:
+        error = ["此帳號還未註冊，無法重新設定密碼。"]
+        return render_template("welcome.html", error=error)
+    else:
+        connection.execute("SELECT username,email FROM users WHERE username = %s", (username,))
+        row = connection.fetchone()
+
+        key = URLSafeSerializer("user-authenticate-key")
+        token = key.dumps(row[0])
+        url = "http://127.0.0.1:5000/reset/" + token
+
+        subject = "[你與○○的距離||custom-made-unit] 密碼重置"
+        message = row[0] + "你好，<br><br>請點選右側連結來重新設定密碼：" + url + "<br>謝謝(´・ω・`)<br><br>"\
+            + "如果沒有重設密碼的需求，請忽略這封信，謝謝。"
+        
+        msg = Message(
+            subject = subject,
+            recipients = [row[1]],
+            html = message
+        )
+        mail.send(msg)
+
+        email = validate_email(row[1])
+        starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
+        error = ["重置密碼的信已經發到"+starMail+"，請依照信中說明來重新設定密碼，謝謝。"]
+        return render_template("welcome.html", error=error)
+
+
+@app.route("/reset/<token>")
+def reset(token):
+    key = URLSafeSerializer("user-authenticate-key")
+    try:
+        plaintext = key.loads(token)
+        session["reset"] = plaintext
+        return redirect(url_for("password"))
+    except BadSignature:
+        return redirect(url_for("password"))
+
+
+@app.route("/reset", methods=["GET", "POST"])
+def password():
+    if request.method == "POST":
+        username = session.get("reset")
+        password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
+
+        if not username:
+            session.clear()
+            return render_template("password.html")
+        elif not password or not confirmation:
+            session["error"] = "請輸入密碼與確認密碼"
+            return render_template("password.html")
+        elif CheckInput(password) is False or CheckLen(password, 8, 24) is False:
+            session["error"] = "密碼不符合規範，長度為8-24個字元，至少包含1英文字母、1數字。"
+            return render_template("password.html")
+        elif password != confirmation:
+            session["error"] = "兩次輸入的密碼內容不同，請檢查。"
+            return render_template("password.html")
+        else:
+            hashpass = generate_password_hash(password)
+            connection.execute("UPDATE users SET hash = %s WHERE username = %s", (hashpass,username))
+            conn.commit()
+            session.clear()
+            error = ["密碼重設成功，請使用新密碼登入，謝謝。"]
+            return render_template("welcome.html", error=error)
+    else:
+        return render_template("password.html") # here "GET" is recirect from reset()
 
 
 @app.route("/confStatus", methods=["POST"])
@@ -345,7 +417,7 @@ def add():
                             VALUES (DEFAULT,%s,%s,%s,%s,%s)",
                             (userID,groupKey,amountInt,notes,dateStamp))
         conn.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
     else:
         connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
         row = connection.fetchone()

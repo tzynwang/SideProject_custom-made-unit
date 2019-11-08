@@ -5,10 +5,10 @@
 {% endblock %}
 
 {% block main %}
-    {% if status=="token無效" %}
-        該連結夾帶的是一組無效的token<br>
-    {% if status=="token過期" %}
-        該連結夾帶的是一組過期的token<br>
+    {% if status == "token無效" %}
+        <p>該連結夾帶的是一組無效的token</p>
+    {% if status == "token過期" %}
+        <p>該連結夾帶的是一組過期的token</p>
     {% endif %}
-    請<a href="/gen_token">點此</a>來發送一封新的認證email，謝謝(`・ω・´)
+    <p>請<a href="/gen_token">點此</a>來發送一封新的認證email，謝謝(`・ω・´)</p>
 {% endblock %}

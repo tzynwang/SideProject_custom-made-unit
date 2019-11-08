@@ -9,10 +9,20 @@ function updateTargets(updateID) {
 		$("#hintBox").attr("class", "alert alert-warning").show();
 		$("#hintText").html("請輸入內容");
 	}
-	else if (updateID == 'targetAmount' && t < 1) {
+	else if (updateID == 'targetAmount' && (t < 1 || t > 2147483647)) {
 		$("#hintBox").attr("class");
 		$("#hintBox").attr("class", "alert alert-warning").show();
 		$("#hintText").html("目標金額至少為1");
+	}
+	else if (updateID == 'target' && t.length > 24) {
+		$("#hintBox").attr("class");
+		$("#hintBox").attr("class", "alert alert-warning").show();
+		$("#hintText").html("目標最多24個字");
+	}
+	else if (updateID == 'targetUnit' && t.length > 8) {
+		$("#hintBox").attr("class");
+		$("#hintBox").attr("class", "alert alert-warning").show();
+		$("#hintText").html("單位最多8個字");
 	}
 	else {
 		$("#hintBox").hide();

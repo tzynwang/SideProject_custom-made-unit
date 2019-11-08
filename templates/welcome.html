@@ -27,7 +27,7 @@
                 {%- endfor %}
             </div>
             {% endif %}
-            <form action="/login" method="post">
+            <form action="/login" method="post" id="loginForm">
                 <div class="form-group">
                     <input autofocus class="form-control" type="text" autocomplete="off"
                     name="username" id="usernameLogin" placeholder="輸入使用者帳號"
@@ -38,11 +38,10 @@
                 </div>
                 <div class="form-group">
                     <input class="form-control" type="password" autocomplete="off"
-                    name="password" placeholder="輸入密碼"
-                    minlength="8" maxlength="24" required>
+                    name="password" placeholder="輸入密碼" minlength="8" maxlength="24">
                 </div>
                 <button class="btn btn-primary" type="submit" id="submitLogin">登入</button>
-                <button class="btn btn-secondary" type="button" id="passReset" formaction="/resetPass">忘記密碼</button>
+                <button class="btn btn-secondary" type="submit" id="passReset" formaction="/forget">忘記密碼</button>
             </form>
         </div>
         
@@ -194,7 +193,7 @@
                     type: "POST",
                     data: JSON.stringify({"pass1": pass1}),
                     dataType: "json",
-                    contentType : "application/json",
+                    contentType: "application/json",
                     success: function(result) {
                         if (result == "nameContFail") {
                             $("#hintRegister").show();
