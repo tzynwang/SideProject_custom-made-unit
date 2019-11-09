@@ -6,26 +6,43 @@
 
 {% block main %}
     <form action="/add" method="post">
-        <div class="form-group">
-            <select class="form-control" name="group" autofocus required>
-                <option selected disabled value="">帳目組別</option>
-                {% for key, value in groupName.items() %}
-                <option value="{{ key }}">{{ value }}</option>
-                {% endfor %}
-            </select>
-            
-            <input class="form-control" type="text" name="notes" maxlength="32" size="32" 
-            placeholder="內容敘述 (最多32中文字)" autocomplete="off">
-
-            <input class="form-control" type="number" name="amount" min="1" style="width: 7em"  
-            placeholder="金額" required autocomplete="off">
-        </div>
-
-        <input class="form-control" type="date" name="dateStamp" required>
-
-        <br><br>
-        <div class="form-group">
-            <button class="btn btn-primary" type="submit">記帳</button>
-        </div>
+        <table class="table table-borderless">
+            <tbody>
+                <tr>
+                    <td>帳目組別</td>
+                    <td class="table-left">
+                        <select class="form-control" name="group" autofocus required>
+                            <option selected disabled value="">(請選擇)</option>
+                            {% for key, value in groupName.items() %}
+                            <option value="{{ key }}">{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>內容敘述</td>
+                    <td class="table-left">
+                        <input class="form-control" type="text" name="notes" maxlength="32" 
+                        placeholder="(最多32字)" autocomplete="off">
+                    </td>
+                </tr>
+                <tr>
+                    <td>金額</td>
+                    <td class="table-left">
+                        <input class="form-control" type="number" name="amount" min="1"  
+                        placeholder="(請輸入)" required autocomplete="off">
+                    </td>
+                </tr>
+                <tr>
+                    <td>日期</td>
+                    <td class="table-left">
+                        <input class="form-control" type="date" name="dateStamp" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><button class="btn btn-primary" type="submit">記帳</button></td>
+                </tr>
+            </tbody>
+        </table>
     </form>
 {% endblock %}
