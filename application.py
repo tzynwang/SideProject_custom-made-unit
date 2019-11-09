@@ -306,21 +306,7 @@ def password():
             error = ["密碼重設成功，請使用新密碼登入，謝謝。"]
             return render_template("welcome.html", error=error)
     else:
-        return render_template("password.html") # here "GET" is recirect from reset()
-
-
-@app.route("/confStatus", methods=["POST"])
-@LoginRequired
-def verify(): # for nav-bar
-    userID = session.get("id")
-    connection.execute("SELECT COALESCE ((SELECT verified from users where id = %s))", (userID,))
-    row = connection.fetchone()   
-
-    if row[0] is None:
-        return jsonify(False)
-    else:
-        # the account is confirmed
-        return jsonify(True)
+        return render_template("password.html") # recirect from reset() BadSignature
     
 
 @app.route("/")
@@ -363,7 +349,6 @@ def index():
             targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target(s)
             percentage = round(float(amount)/float(row[2]),2)
             return render_template("index.html", amount=amount, targets=targets, percentage=percentage)
-            # amount為0的時候(當月沒有記帳紀錄) ==> 顯示「本月沒有記帳紀錄」
 
 
 @app.route("/queryMonthSum", methods=["POST"])
