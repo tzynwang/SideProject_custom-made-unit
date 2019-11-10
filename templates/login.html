@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% from "macro.html" import username,password,button %}
+
+{% block title -%}
+    登入
+{%- endblock %}
+
+{% block main %}
+    {% if error %}
+        <div class="alert alert-warning" role="alert">{{ error }}</div>
+    {% endif %}
+    <form action="/login" method="post">
+        <div class="form-group">
+            {{ username() }}
+            <small class="form-text" id="hint">查無帳號<span id="id"></span>，<a href="/register">去註冊？</a></small>
+        </div>
+        <div class="form-group">
+            {{ password("password","password","輸入密碼") }}
+        </div>
+        <div class="form-group">
+            {{ button("submit","submit","登入") }}
+        </div>
+    </form>
+    <div class="form-group">
+        <small class="form-text"><a href="/forget">忘記密碼</a> || 還沒有帳號？<a href="/register">去註冊</a></small>
+    </div>
+
+    <script>
+        $($("#hint").hide());
+
+        $("#username").on("change", function() {
+            var username = $('#username').val();
+            $.ajax({
+                url: "/newUser",
+                type: "GET",
+                data: {"username": username},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result){
+                    if (result == true) {
+                        $("#hint").show();
+                        $("#id").html(username);
+                        $("#submit").attr("disabled", true);
+                    }
+                    else {
+                        $("#hint").hide();
+                        $("#submit").attr("disabled", false);
+                    }
+                },
+            });
+        });
+    </script>
+{% endblock %}

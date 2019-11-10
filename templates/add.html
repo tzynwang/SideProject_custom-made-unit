@@ -4,7 +4,17 @@
     新增帳目
 {% endblock %}
 
-{% block main %}
+{% block nav %}
+    {% include "nav.html" %}
+{% endblock %}
+
+{% block main %}    
+    {% if error %}
+        <div class="alert alert-warning" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
+    
     <form action="/add" method="post">
         <div class="form-group">
             <select class="form-control" name="group" autofocus required>
@@ -15,15 +25,13 @@
             </select>
             
             <input class="form-control" type="text" name="notes" maxlength="32" size="32" 
-            placeholder="內容敘述 (最多32中文字)" autocomplete="off">
+            placeholder="內容敘述 (最多32字)" autocomplete="off">
 
             <input class="form-control" type="number" name="amount" min="1" style="width: 7em"  
-            placeholder="金額" required autocomplete="off">
+            placeholder="金額" autocomplete="off" required>
+
+            <input class="form-control" type="date" name="dateStamp" required>
         </div>
-
-        <input class="form-control" type="date" name="dateStamp" required>
-
-        <br><br>
         <div class="form-group">
             <button class="btn btn-primary" type="submit">記帳</button>
         </div>

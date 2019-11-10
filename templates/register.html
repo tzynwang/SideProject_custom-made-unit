@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+{% from "macro.html" import username,password,button,small %}
+
+{% block title -%}
+    註冊
+{%- endblock %}
+
+{% block main %}
+    {% if error %}
+        <div class="alert alert-warning" role="alert">{{ error }}</div>
+    {% endif %}
+    <div class="form-group">
+        <small class="form-text warning" id="hint"></small>
+    </div>
+    <form action="/register" method="post">
+        <div class="form-group">
+            {{ username() }}
+            {{ small("長度限制8-16字，至少包含1個英文與1個數字") }}
+        </div>
+        
+        <div class="form-group"> 
+            <input autocomplete="off" class="form-control" name="email" id="email" 
+            type="email" placeholder="輸入email" required>
+            {{ small("註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能") }}
+        </div>
+
+        <div class="form-group">
+            {{ password("password","password","輸入密碼") }}
+        </div>
+        
+        <div class="form-group">
+            {{ password("confirmation","confirmation","確認密碼") }}
+            {{ small("長度限制8-24字，至少包含1個英文與1個數字") }}
+        </div>
+
+        <div class="form-group">
+            {{ button("submit","submit","註冊") }}
+        </div>
+    </form>
+    <div class="form-group">
+        <small class="form-text">已經擁有帳號？<a href="/login">登入</a></small>
+    </div>
+
+    <script>
+        $($("#hint").hide());
+
+        $("#username").on("change", function() {
+            var username = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: "/checkUser",
+                data: {"username": username},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result){
+                    if (result == "nameContFail") {
+                        $("#hint").show().html("帳號內容不符合規範");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else if (result == "userExist") {
+                        $("#hint").show().html("這個帳號名稱已經有人使用過了，請換一個");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else if (result == "lenFail") {
+                        $("#hint").show().html("帳號長度不符合規範");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else {
+                        $("#hint").hide();
+                        $("#submit").attr("disabled", false);
+                    }
+                },
+            });
+        })
+
+        $("#email").on("change", function() {
+            var email = $("#email").val();
+            $.ajax({
+                type: "GET",
+                url: "/mailValidate",
+                data: {"maddress": email},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result) {
+                    if (result == "mailExist") {
+                        $("#hint").show().html("輸入的email已經被使用過了");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else if (result == "mailFail") {
+                        $("#hint").show().html("輸入的email無效，請檢查拼字、或是確認這個email的有效性");
+                        $("#submit").attr("disabled", true);
+                    }
+                    else {
+                        $("#hint").hide();
+                        $("#submit").attr("disabled", false);
+                    }
+                },
+            });
+        });
+
+        $("#password, #confirmation").on("change", function() {
+            var password = $("#password").val();
+            var confirmation = $("#confirmation").val();
+            if (password == confirmation) {
+                $.ajax({
+                    url: "/checkPass",
+                    type: "POST",
+                    data: JSON.stringify({"pass1": password}),
+                    dataType: "json",
+                    contentType : "application/json",
+                    success: function(result) {
+                        if (result == "nameContFail") {
+                            $("#hint").show().html("密碼內容不符合規範");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else if (result == "lenFail") {
+                            $("#hint").show().html("密碼長度不符合規範");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else {
+                            $("#hint").hide();
+                            $("#submit").attr("disabled", false);
+                        }
+                    },
+                });
+            }
+            else {
+                $("#hint").show().html("密碼與確認密碼的內容不同");
+                $("#submit").attr("disabled", true);
+            }
+        });
+    </script>
+{% endblock %}

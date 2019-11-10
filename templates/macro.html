@@ -1,0 +1,17 @@
+{% macro username(placeholder="輸入帳號") -%}
+    <input autofocus autocomplete="off" class="form-control" name="username" id="username" 
+    minlength="8" maxlength="16" type="text" placeholder="{{ placeholder }}" required>
+{%- endmacro %}
+
+{% macro password(name,id,placeholder) -%}
+    <input autocomplete="off" class="form-control" name="{{ name }}" id="{{ id }}"
+    minlength="8" maxlength="24" type="password" placeholder="{{ placeholder }}" required>
+{%- endmacro %}
+
+{% macro button(type,id,text) -%}
+    <button class="btn btn-primary" type="{{ type }}" id="{{ id }}">{{ text }}</button>
+{%- endmacro %}
+
+{% macro small(text) -%}
+    <small class="form-text text-muted">{{ text }}</small>
+{%- endmacro %}

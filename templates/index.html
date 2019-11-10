@@ -4,6 +4,10 @@
     狀態
 {% endblock %}
 
+{% block nav %}
+    {% include "nav.html" %}
+{% endblock %}
+
 {% block main %}
     {% if not session.verified %}
         <p>帳號"{{ username }}"還沒被啟動，請至{{ email }}收信，點擊信中提供的網址來啟動帳號</p>
@@ -58,7 +62,7 @@
                 $("#monthBill, #percentage").text("0");
                 $("#targets").hide();
             }
-            if (date != "") {
+            else {
                 $.ajax({
                     url: "/queryMonthSum",
                     type: "POST",
