@@ -47,7 +47,7 @@
     </form>
 
     <script>
-        var today;
+        var today, date;
         $(function() {
             var t = new Date();
             var YYYY = t.getFullYear();
@@ -59,30 +59,23 @@
             $("#dateStamp").hide()
         );
         
-        var selected, date;
-        $("input[name='dateSelect']").on("change", function() {
-            selected = $("input[name='dateSelect']:checked").val();
+        $("input[name='dateSelect']").on("click", function() {
+            var selected = $("input[name='dateSelect']:checked").val();
             if (selected == "today") {
                 $("#dateStamp").hide();
                 $("#dateStamp").attr({
                     value: today
                 });
-                date = $("#dateStamp").val();
+                date = today;
             }
             if (selected == "selected") {
                 $("#dateStamp").show();
-                $("#dateStamp").attr({
-                    value: ""
-                });
-                date = $("#dateStamp").val();
-            }
-            if (!date) {
-                $("#hint").html("請選擇日期");
-            }
-            else {
-                $("#hint").html("");
             }
         });
+        
+        $("#dateStamp").on("change", function() {
+            date = $("#dateStamp").val(); // get date value by calender
+        })
 
         $("form").submit(function() {
             if (!date) {
