@@ -15,7 +15,6 @@
         </div>
     {% endif %}
     
-    <small class="form-group warning" id="hint"></small>
     <div class="container con-form">
         <form action="/add" method="post">
             <div class="row">
@@ -47,11 +46,10 @@
                 <div class="col">
                     <div class="pretty p-default p-round">
                         <input class="form-control" type="radio" name="dateSelect" value="selected">
-                        <div class="state p-primary-o"><label>其他日期</label></div>
+                        <div class="state p-primary-o"><label>其他日期：</label><span class="warning" id="hint"></span></div>
                     </div>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col"></div>
                 <div class="col">
@@ -60,44 +58,40 @@
             </div>
             
             <div class="row row-btn">
-                <button class="btn btn-primary" type="submit">記帳</button>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">記帳</button>
             </div>
         </form>
     </div>
 
     <script>
-        var today, date;
+        var today;
         $(function() {
             var t = new Date();
             var YYYY = t.getFullYear();
             var MM = t.getMonth()+1; // getMonth() is zero-based
             var DD = t.getDate();
             today = YYYY+"-"+MM+"-"+DD;
+            $("#dateStamp").attr("value", today);
         });
         $(
             $("#dateStamp").hide()
         );
         
-        $("input[name='dateSelect']").on("click", function() {
+        $("input[name='dateSelect']").on("change", function() {
             var selected = $("input[name='dateSelect']:checked").val();
             if (selected == "today") {
                 $("#dateStamp").hide();
-                $("#dateStamp").attr({
-                    value: today
-                });
-                date = today;
+                $("#dateStamp").val(today);
+                $("#hint").html("");
             }
             if (selected == "selected") {
+                $("#dateStamp").val("");
                 $("#dateStamp").show();
             }
         });
-        
-        $("#dateStamp").on("change", function() {
-            date = $("#dateStamp").val(); // get date value by calender
-        })
 
         $("form").submit(function() {
-            if (!date) {
+            if (!$("#dateStamp").val()) {
                 $("#hint").html("請選擇日期");
                 return false
             }
