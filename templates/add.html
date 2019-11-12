@@ -16,35 +16,54 @@
     {% endif %}
     
     <small class="form-group warning" id="hint"></small>
-    <form action="/add" method="post">
-        <div class="form-group">
-            <select class="form-control" name="group" autofocus required>
-                <option selected disabled value="">帳目組別</option>
-                {% for key, value in groupName.items() %}
-                <option value="{{ key }}">{{ value }}</option>
-                {% endfor %}
-            </select>
+    <div class="container con-form">
+        <form action="/add" method="post">
+            <div class="row">
+                <select class="form-control" name="group" autofocus required>
+                    <option selected disabled value="">帳目組別</option>
+                    {% for key, value in groupName.items() %}
+                    <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row">
+                <input class="form-control" type="text" name="notes" maxlength="32" size="32" 
+                placeholder="內容敘述 (最多32字)" autocomplete="off">
+            </div>
+                
+            <div class="row">
+                <input class="form-control" type="number" name="amount" min="1"  
+                placeholder="金額" autocomplete="off" required>
+            </div>
             
-            <input class="form-control" type="text" name="notes" maxlength="32" size="32" 
-            placeholder="內容敘述 (最多32字)" autocomplete="off">
-
-            <input class="form-control" type="number" name="amount" min="1" style="width: 7em"  
-            placeholder="金額" autocomplete="off" required>
-
-            <div class="pretty p-default p-round">
-                <input class="form-control" type="radio" name="dateSelect" value="today" checked>
-                <div class="state p-primary-o"><label>今天</label></div>
+            <div class="row">
+                <div class="col">
+                    <div class="pretty p-default p-round">
+                        <input class="form-control" type="radio" name="dateSelect" value="today" checked>
+                        <div class="state p-primary-o"><label>今天</label></div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="pretty p-default p-round">
+                        <input class="form-control" type="radio" name="dateSelect" value="selected">
+                        <div class="state p-primary-o"><label>其他日期</label></div>
+                    </div>
+                </div>
             </div>
-            <div class="pretty p-default p-round">
-                <input class="form-control" type="radio" name="dateSelect" value="selected">
-                <div class="state p-primary-o"><label>其他日期</label></div>
+
+            <div class="row">
+                <div class="col"></div>
+                <div class="col">
+                    <input class="form-control" type="date" name="dateStamp" id="dateStamp"> ## calender
+                </div>
             </div>
-            <input class="form-control" type="date" name="dateStamp" id="dateStamp"> ## calender
-        </div>
-        <div class="form-group">
-            <button class="btn btn-primary" type="submit">記帳</button>
-        </div>
-    </form>
+            
+            <div class="row row-btn">
+                <button class="btn btn-primary" type="submit">記帳</button>
+            </div>
+        </form>
+    </div>
 
     <script>
         var today, date;
