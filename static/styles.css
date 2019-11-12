@@ -1,73 +1,29 @@
-@import url(https://fonts.googleapis.com/earlyaccess/notosanstc.css);
+.row {
+    margin-top: 0.5em;
+}
 
-html {
-    font-family: 'Noto Sans TC', sans-serif !important;
+.btn, .btn-primary {
+    /* overwrite bootstrap setting*/
     font-weight: 100;
 }
 
-nav .navbar-brand {
-    font-size: large;
-    font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 300;
+/* welcome.html */
+.card > * {
+    margin: auto;
+}
+.card-img-top {
+    width: 100%;
+    height: auto;
 }
 
-.navbar-collapse, .nav {
-    font-size: medium;
-    font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 100;
+/* login.html */
+.container {
+    max-width: 540px;
 }
 
-.form-group, .form-control, .form-text, .btn, .alert {
-    font-size: 14px;
-    font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 100;
-}
-
-.form-text {
-    font-size: x-small;
-}
-
-main .form-control {
-    /* center form controls */
-    display: inline-block;
-
-    /* override Bootstrap's 100% width for form controls */
-    width: auto;
-}
-
-main {
-    /* scroll horizontally as needed */
-    overflow-x: auto;
-
-    /* center contents */
-    text-align: center;
-}
-
-p, .p-mimic {
-    font-family: 'Noto Sans TC', sans-serif !important;
-    font-weight: 100;
-}
-
-.table-left {
-    text-align: left;
-}
-
+/* other mics */
 .warning {
     color: red;
-}
-
-main img {
-    /* constrain images on small screens */
-    max-width: 100%;
-}
-
-body {
-    background-color: rgb(189, 245, 189);
-}
-
-.modal-dialog, .table {
-    font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 100;
 }
 
 .modal-header {
@@ -84,12 +40,6 @@ body {
     color: #0056b3;
     text-decoration: underline;
     cursor: pointer;
-}
-
-#t-bottom-line { 
-    /* in setting.html */
-    border-collapse: collapse;
-    border-bottom: 1px solid black;
 }
 
 footer {
