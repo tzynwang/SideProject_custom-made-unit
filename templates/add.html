@@ -15,6 +15,7 @@
         </div>
     {% endif %}
     
+    <small class="form-group warning" id="hint"></small>
     <form action="/add" method="post">
         <div class="form-group">
             <select class="form-control" name="group" autofocus required>
@@ -58,19 +59,38 @@
             $("#dateStamp").hide()
         );
         
+        var selected, date;
         $("input[name='dateSelect']").on("change", function() {
-            var val = $("input[name='dateSelect']:checked").val();
-            if (val == "today") {
+            selected = $("input[name='dateSelect']:checked").val();
+            if (selected == "today") {
                 $("#dateStamp").hide();
                 $("#dateStamp").attr({
                     value: today
                 });
+                date = $("#dateStamp").val();
             }
-            if (val == "selected") {
+            if (selected == "selected") {
                 $("#dateStamp").show();
                 $("#dateStamp").attr({
                     value: ""
                 });
+                date = $("#dateStamp").val();
+            }
+            if (!date) {
+                $("#hint").html("請選擇日期");
+            }
+            else {
+                $("#hint").html("");
+            }
+        });
+
+        $("form").submit(function() {
+            if (!date) {
+                $("#hint").html("請選擇日期");
+                return false
+            }
+            else {
+                $("#hint").html("");
             }
         });
     </script>
