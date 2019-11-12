@@ -30,10 +30,48 @@
             <input class="form-control" type="number" name="amount" min="1" style="width: 7em"  
             placeholder="金額" autocomplete="off" required>
 
-            <input class="form-control" type="date" name="dateStamp" required>
+            <div class="pretty p-default p-round">
+                <input class="form-control" type="radio" name="dateSelect" value="today">
+                <div class="state p-primary-o"><label>今天</label></div>
+            </div>
+            <div class="pretty p-default p-round">
+                <input class="form-control" type="radio" name="dateSelect" value="selected">
+                <div class="state p-primary-o"><label>其他日期</label></div>
+            </div>
+            <input class="form-control" type="date" name="dateStamp" id="dateStamp"> ## calender
         </div>
         <div class="form-group">
             <button class="btn btn-primary" type="submit">記帳</button>
         </div>
     </form>
+
+    <script>
+        var today;
+        $(function() {
+            var t = new Date();
+            var YYYY = t.getFullYear();
+            var MM = t.getMonth()+1; // getMonth() is zero-based
+            var DD = t.getDate();
+            today = YYYY+"-"+MM+"-"+DD;
+        });
+        $(
+            $("#dateStamp").hide()
+        );
+        
+        $("input[name='dateSelect']").on("change", function() {
+            var val = $("input[name='dateSelect']:checked").val();
+            if (val == "today") {
+                $("#dateStamp").hide();
+                $("#dateStamp").attr({
+                    value: today
+                });
+            }
+            if (val == "selected") {
+                $("#dateStamp").show();
+                $("#dateStamp").attr({
+                    value: ""
+                });
+            }
+        });
+    </script>
 {% endblock %}

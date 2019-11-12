@@ -27,6 +27,8 @@ app.config["MAIL_USERNAME"] = "custom.made.unit@gmail.com"
 app.config["MAIL_PASSWORD"] = "rinyukarine"
 mail = Mail(app)
 
+app.jinja_env.line_comment_prefix = '##'
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
