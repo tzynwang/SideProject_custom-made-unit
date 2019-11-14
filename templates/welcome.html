@@ -5,33 +5,35 @@
 {%- endblock %}
 
 {% block main %}
-    <div class="card-deck">
-        <div class="card">
-            <img class="card-img-top" src="/static/1.png">
-            <div class="card-body">
-                <h5 class="card-title">對數字毫無概念？</h5>
+    <div class="container con-index">
+        <div class="card-deck">
+            <div class="card">
+                <img class="card-img-top" src="/static/1.png">
+                <div class="card-body">
+                    <h5 class="card-title">對數字毫無概念？</h5>
+                </div>
+            </div>
+            <div class="card">
+                <img class="card-img-top" src="/static/2.png">
+                <div class="card-body">
+                    <h5 class="card-title">那就把數字</h5>
+                </div>
+            </div>
+            <div class="card">
+                <img class="card-img-top" src="/static/3.png">
+                <div class="card-body">
+                    <h5 class="card-title">變成喜歡的樣子</h5>
+                </div>
             </div>
         </div>
-        <div class="card">
-            <img class="card-img-top" src="/static/2.png">
-            <div class="card-body">
-                <h5 class="card-title">那就把數字</h5>
-            </div>
+        <div style="margin-top: 1.5em; margin-bottom: 1.5em; text-align: center;">
+            <h3 style="letter-spacing: 0.8em;">訂製單位<span class="text-muted">：你與●●的距離</span></h3>
         </div>
-        <div class="card">
-            <img class="card-img-top" src="/static/3.png">
-            <div class="card-body">
-                <h5 class="card-title">變成喜歡的樣子</h5>
-            </div>
+        <div class="row">
+            <button class="btn btn-primary btn-lg btn-block" onclick="location.href='/register'">註冊</button>
         </div>
-    </div>
-    <div class="row" style="margin-top: 1.5em; margin-bottom: 1.5em; text-align: center;">
-        <h3 style="letter-spacing: 0.8em;">訂製單位<span class="text-muted">：你與●●的距離</span></h3>
-    </div>
-    <div class="row">
-        <button class="btn btn-primary btn-lg btn-block" onclick="location.href='/register'">註冊</button>
-    </div>
-    <div class="row">
-            <button class="btn btn-secondary btn-lg btn-block" onclick="location.href='/login'">登入</button>
+        <div class="row">
+                <button class="btn btn-secondary btn-lg btn-block" onclick="location.href='/login'">登入</button>
+        </div>
     </div>
 {% endblock %}

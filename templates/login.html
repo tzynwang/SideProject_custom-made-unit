@@ -9,29 +9,25 @@
     {% if error %}
         <div class="alert alert-warning" role="alert">{{ error }}</div>
     {% endif %}
-    <div class="container">
+    <div class="container con-form">
         <form action="/login" method="post">
             <div class="row">
-                <div class="col">帳號：</div><div class="col"></div>
+                帳號：<span id="hint">查無帳號"<span id="id"></span>"，<a href="/register">去註冊？</a></span>
             </div>
             <div class="row">
                 {{ username() }}
-                <small id="hint">查無帳號<span id="id"></span>，<a href="/register">去註冊？</a></small>
             </div>
-            <div class="row">
-                <div class="col">密碼：</div><div class="col"></div>
-            </div>
+            <div class="row">密碼：</div>
             <div class="row">
                 {{ password("password","password","輸入密碼") }}
             </div>
-            <div class="row" style="margin-top: 1em; margin-bottom: 1em;">
+            
+            <div class="row row-btn">
                 {{ button("submit","submit","登入") }}
             </div>
+            
             <div class="row">
-                <small><a href="/forget">忘記密碼</a> || 還沒有帳號？<a href="/register">去註冊</a></small>
-            </div>
-            <div class="row">
-                <small><a href="/">回首頁</a></small>
+                <small><a href="/forget">忘記密碼</a> || 還沒有帳號？<a href="/register">去註冊</a> || <a href="/">回首頁</a></small>
             </div>
         </form>
     </div>

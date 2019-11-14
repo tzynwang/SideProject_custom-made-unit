@@ -172,9 +172,30 @@ def token():
         )
         mail.send(msg)
         session["last"] = now + timedelta(minutes = 5)
-        return redirect(url_for("index"))
+
+        email = validate_email(row[1])
+        starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
+        session["newtoken"] = "認證信已經發到"+starMail+"，請依照信中說明來啟動帳號，謝謝。"
+        return redirect(url_for("tokendone"))
     else:
-        return redirect(url_for("index"))
+        return redirect(url_for("tokenfail", sec=abs(int((now-last).total_seconds()))))
+
+
+@app.route("/gen_token/done")
+def tokendone():
+    error = session.get("newtoken")
+    return render_template("token_done.html", error=error)
+
+
+@app.route("/gen_token/fail")
+def tokenfail():
+    sec = int(request.args.get("sec"))
+    m, s = divmod(sec, 60)
+    if m is 0:
+        waitingtime = str(s)+"秒"
+    else:
+        waitingtime = str(m)+"分"+str(s)+"秒"
+    return render_template("token_fail.html", error=waitingtime)
 
 
 @app.route("/authenticate/<token>")
@@ -262,10 +283,16 @@ def forget():
 
         email = validate_email(row[1])
         starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
-        error = "重置密碼的信已經發到"+starMail+"，請依照信中說明來重新設定密碼，謝謝。"
-        return render_template("forget_done.html", error=error)
+        session["newpassword"] = "重置密碼的信已經發到"+starMail+"，請依照信中說明來重新設定密碼，謝謝。"
+        return redirect(url_for("forget_done"))
     else:
         return render_template("forget.html", error=None)
+
+
+@app.route("/forget/sent")
+def forget_done():
+    error = session.get("newpassword")
+    return render_template("forget_done.html", error=error)
 
 
 @app.route("/reset/<token>")
@@ -342,7 +369,7 @@ def index():
         # no targetamount info
         if row[2] is None:
             session["targetamount"] = None
-            return render_template("index.html", amount=amount, YYYY=str(NOW.year), MM=str(NOW.month))
+            return render_template("index.html")
         else:
             session["targetamount"] = True
             targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target(s)
@@ -501,32 +528,35 @@ def setting():
     groupName = [row[0], row[1], row[2], row[3]]
 
     return render_template("setting.html", groupName=groupName, target=target, targetAmount=targetAmount, targetUnit=targetUnit)
-    
-    #修改email
 
 
 @app.route("/updateTarget", methods=["POST"])
 @LoginRequired
 def updatetargets():
     userID = session.get("id")
-    tType = request.get_json()["tType"]
-    tContent = request.get_json()["content"]
-    
-    if tType == "targetAmount":
-        connection.execute("UPDATE targets SET targetamount = %s WHERE userid = %s", (tContent,userID))
-        conn.commit()
-        connection.execute("SELECT targetamount FROM targets WHERE userid = %s", (userID,))
-    if tType == "target":
-        connection.execute("UPDATE targets SET target = %s WHERE userid = %s", (tContent,userID))
-        conn.commit()
-        connection.execute("SELECT target FROM targets WHERE userid = %s", (userID,))
-    if tType == "targetUnit":
-        connection.execute("UPDATE targets SET targetunit = %s WHERE userid = %s", (tContent,userID))
-        conn.commit()
-        connection.execute("SELECT targetunit FROM targets WHERE userid = %s", (userID,))
-    
-    row = connection.fetchone()
-    return jsonify(row[0])
+    t = request.get_json()
+    updatedT = {}
+
+    for k,v in t.items():
+        if k == "targetAmount" and v:
+            try:
+                int(v)
+            except ValueError:
+                return jsonify(False)
+            if int(v) > 1 and int(v) < 2147483647:
+                connection.execute("UPDATE targets SET targetamount = %s WHERE userid = %s", (v,userID))
+                conn.commit()
+                updatedT.update({k: v})
+        if k == "target" and v and len(v) < 25:
+            connection.execute("UPDATE targets SET target = %s WHERE userid = %s", (v,userID))
+            conn.commit()
+            updatedT.update({k: v})
+        if k == "targetUnit" and v and len(v) < 9:
+            connection.execute("UPDATE targets SET targetunit = %s WHERE userid = %s", (v,userID))
+            conn.commit()
+            updatedT.update({k: v})
+
+    return jsonify(updatedT)
 
 
 @app.route("/updateGroupName", methods=["POST"])

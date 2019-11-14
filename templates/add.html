@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 
-{% block title %}
-    新增帳目
-{% endblock %}
+{% block title -%}
+    記帳
+{%- endblock %}
 
 {% block nav %}
     {% include "nav.html" %}
@@ -66,12 +66,13 @@
     <script>
         var today;
         $(function() {
-            var t = new Date();
-            var YYYY = t.getFullYear();
-            var MM = t.getMonth()+1; // getMonth() is zero-based
-            var DD = t.getDate();
-            today = YYYY+"-"+MM+"-"+DD;
-            $("#dateStamp").attr("value", today);
+            today = moment().format(moment.HTML5_FMT.DATE);
+            var yearago = moment().add(-1, 'y').format(moment.HTML5_FMT.DATE);
+            $("#dateStamp").attr({
+                "value": today,
+                "min": yearago,
+                "max": today
+            });
         });
         $(
             $("#dateStamp").hide()

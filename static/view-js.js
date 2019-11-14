@@ -1,10 +1,44 @@
-$(document).ready(
+$(
 	$("#hintBox").hide(),
+	$("#dateselector").hide(),
 	$("#result").hide(),
 	$("#editForm").hide()
-); 
+);
 
-function setMin() {
+var today = moment().format(moment.HTML5_FMT.DATE);
+var yearago = moment().add(-1, 'y').format(moment.HTML5_FMT.DATE);
+$(
+	$("#start").attr({
+		min: yearago,
+		max: today
+	})
+);
+
+$("input[name='dateSelect']").on("change", function() {
+	var pick = $(this).val();
+	if (pick == "userselect") {
+		$("#dateselector").show();
+	}
+	else {
+		$("#dateselector").hide();
+		if (pick == "thisday") {
+			$("#start").attr("value", today);
+			$("#end").attr("value", today);
+		}
+		if (pick == "thisweek") {
+			var weekstart = moment().startOf('week').format(moment.HTML5_FMT.DATE);
+			$("#start").attr("value", weekstart);
+			$("#end").attr("value", today);
+		}
+		if (pick == "thismonth") {
+			var monstart = moment().startOf('month').format(moment.HTML5_FMT.DATE);
+			$("#start").attr("value", monstart);
+			$("#end").attr("value", today);
+		}
+	}
+});
+
+$("#start").on("change", function() {
 	var start = $("#start").val();
 	var end = $("#end").val();
 	if (start > end) {
@@ -13,7 +47,7 @@ function setMin() {
 			"min": $("#start").val()
 		});
 	}
-}
+});
 
 function sortRow(index, ID) {
 	var tbody = $('#row');
@@ -42,7 +76,7 @@ function sortRow(index, ID) {
 }
 
 var tdName = ["null","ediDate","ediGroup","ediNote","ediAmount"];
-function sendTime() {
+$("#sendTime").on("click", function() {
 	$("#result").val("");
 	var start = $("#start").val();
 	var end = $("#end").val();
@@ -53,7 +87,7 @@ function sendTime() {
 	});
 
 	if (!start || !end) {
-		$("#hintText").html("請設定查詢範圍");
+		$("#hintText").html("請設定查詢日期");
 		$("#hintBox").attr("class","alert alert-info");
 		$("#hintBox").show();
 	}
@@ -118,9 +152,9 @@ function sendTime() {
 			}
 		});
 	}
-}
+});
 
-$("#ediAmount").change(function() {
+$("#ediAmount").on("change", function() {
 	var amount = $("#ediAmount").val();
 	if (!amount) {
 		$("#toUpdate").removeAttr("disabled");
@@ -134,14 +168,7 @@ $("#ediAmount").change(function() {
 	}
 });
 
-$("#trashIcon").hover(
-	function() {
-		$(this).css("color","#dc3545");},
-	function() {
-		$(this).css("color","#6c757d");}
-);
-
-function deleteBill() {
+$("#deleteBill").on("click", function() {
 	$.ajax({
 		url: "/billDelete",
 		type: "POST",
@@ -160,7 +187,7 @@ function deleteBill() {
 			$("#sum").text(newSum);
 		}
 	});
-}
+});
 
 var trID = null;
 $("tbody").on("click", "tr", function() { 
@@ -168,7 +195,7 @@ $("tbody").on("click", "tr", function() {
 	if (trID && this.id != trID) {
 		var newID = this.id;
 		$("#"+trID).css("background-color", "transparent");
-		$("#"+newID).css("background-color", "#ffdf80");
+		$("#"+newID).css("background-color", "#e2e6ea");
 		$("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
 		$("#toUpdate").click(newID, function(){
 			recordEdit(newID);
@@ -177,7 +204,7 @@ $("tbody").on("click", "tr", function() {
 	}
 
 	trID = this.id;
-	$("#"+this.id).css("background-color", "#ffdf80");
+	$("#"+this.id).css("background-color", "#e2e6ea");
 	$("#editForm").show("slow");
 	$("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
 	$("#toUpdate").click(trID, function(){

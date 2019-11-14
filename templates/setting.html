@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 
-{% block title %}
+{% block title -%}
     設定
-{% endblock %}
+{%- endblock %}
 
 {% block nav %}
     {% include "nav.html" %}
@@ -10,77 +10,63 @@
 
 {% block main %}
 
-    <div class="" role="alert" id="hintBox">
-        <span id="hintText"></span>
+    ## target setting
+    <div class="container con-form">
+        <div class="row"><h4>目標訂製區</h4></div>
+        <small class="text-primary" id="hintT"></small>
+        <div class="row">金額：<span id="targetAmountSpan" class="text-primary">{{ targetAmount }}</span><span>元</span></div>
+        <div class="row">
+            <input class="form-control" id="targetAmount" type="number" placeholder="最少為1元" min="1" max="2147483647">
+        </div>
+        <div class="row">目標物：<span id="targetSpan" class="text-primary">{{ target }}</span></div>
+        <div class="row">
+            <input class="form-control" id="target" type="text" placeholder="例子：平板" maxlength="24">
+        </div>
+        <div class="row">單位：<span id="targetUnitSpan" class="text-primary">{{ targetUnit }}</span></div>
+        <div class="row">
+            <input class="form-control" id="targetUnit" type="text" placeholder="例子：臺" maxlength="8">
+        </div>
+        <div class="row row-btn">
+            <button class="btn btn-primary" id="updateTargets">設定</button>
+        </div>
     </div>
 
-    <table class="table table-bordered">
-        <tbody>
-            <tr>
-                <td><label for="targetAmountSpan">金額</label></td>
-                <td><span id="targetAmountSpan">{{ targetAmount }}</span><span>元</span></td>
-                <td>
-                    <input class="form-control" name="targetGroup" id="targetAmount" type="number" 
-                    placeholder="最少為1元" min="1">
-                </td>
-                <td>
-                    <button class="btn btn-primary" type="button" onclick="updateTargets('targetAmount')">更新</button>
-                </td>
-            </tr>
-            <tr>
-                <td><label for="targetSpan">代表金額的目標</label></td>
-                <td><span id="targetSpan">{{ target }}</span></td>
-                <td>
-                    <input class="form-control" name="targetGroup" id="target" type="text" 
-                    placeholder="例子：平板" maxlength="24">
-                </td>
-                <td>
-                    <button class="btn btn-primary" type="button" onclick="updateTargets('target')">更新</button>
-                </td>
-            </tr>
-            <tr>
-                <td><label for="targetUnitSpan">目標的單位</label></td>
-                <td><span id="targetUnitSpan">{{ targetUnit }}</span></td>
-                <td>
-                    <input class="form-control" name="targetGroup" id="targetUnit" type="text" 
-                    placeholder="例子：臺" maxlength="8">
-                </td>
-                <td>
-                    <button class="btn btn-primary" type="button" onclick="updateTargets('targetUnit')">更新</button>
-                </td>
-            </tr>
+    ## update group
+    <div class="container con-form" style="margin-top: 2em;">
+        <div class="row"><h4>更新組別名稱</h4></div>
+        <small class="text-primary" id="hintG"></small>
+        <div class="row">
+            <select class="form-control" id="gNames">
+                <option selected disabled value="">選擇組別</option>
+                <option id="op0" value="g0">{{ groupName[0] }}</option>
+                <option id="op1" value="g1">{{ groupName[1] }}</option>
+                <option id="op2" value="g2">{{ groupName[2] }}</option>
+                <option id="op3" value="g3">{{ groupName[3] }}</option>
+            </select>
+            <input class="form-control" id="groupName" type="text" placeholder="輸入自訂名稱" maxlength="24"
+            style="margin-top: 0.2em;">
+        </div>
+        <div class="row row-btn">
+            <button class="btn btn-primary" id="updateName" type="button">更新</button>
+        </div>
+    </div>
 
-            <tr>
-                <td><label for="gNames">更新帳目分組名稱</label></td>
-                <td>
-                    <select class="form-control" id="gNames">
-                        <option selected disabled value="">先選擇組別</option>
-                        <option id="op0" value="g0">{{ groupName[0] }}</option>
-                        <option id="op1" value="g1">{{ groupName[1] }}</option>
-                        <option id="op2" value="g2">{{ groupName[2] }}</option>
-                        <option id="op3" value="g3">{{ groupName[3] }}</option>
-                    </select>
-                </td>
-                <td><input class="form-control" id="updateName" type="text" placeholder="再輸入自訂名稱" maxlength="24"></td>
-                <td><button class="btn btn-primary" type="button" onclick="updateName()">更新</button></td>
-            </tr>
+    ## account info update
+    <div class="container con-form" style="margin-top: 2em;">
+        <div class="row"><h4>更新密碼</h4></div>
+        <small class="text-primary" id="hintP"></small>
+        <div class="row">
+            <input class="form-control" type="password" autocomplete="off" id="pass1" 
+            placeholder="密碼 (長度限制8-24字)" minlength="8" maxlength="24">
+            <input class="form-control" type="password" autocomplete="off" id="pass2" 
+            placeholder="確認 (數字英文各1)" minlength="8" maxlength="24"
+            style="margin-top: 0.2em;">
+        </div>
+        <div class="row row-btn">
+            <button class="btn btn-primary" type="button" id="updatePass">更新</button>
+        </div>
+    </div>
 
-            <tr>
-                <td>
-                    <lable for="pass1">更新密碼</lable><br>
-                </td>
-                <td>
-                    <input class="form-control" type="password" autocomplete="off" name="password" id="pass1" 
-                    placeholder="密碼 (長度限制8-24字)" minlength="8" maxlength="24">
-                </td>
-                <td>
-                    <input class="form-control" type="password" autocomplete="off" name="confirmation" id="pass2" 
-                    placeholder="確認 (數字英文各1)" minlength="8" maxlength="24">
-                </td>
-                <td><button class="btn btn-primary" type="button" onclick="updatePass()">更新</button></td>
-            </tr>
-        </tbody>
-    </table>
+    <script src="/static/setting-js.js?version=8"></script>
 
-    <script src="/static/setting-js.js?version=0"></script>
 {% endblock %}

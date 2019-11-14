@@ -9,30 +9,20 @@
     {% if error %}
         <div class="alert alert-warning" role="alert">{{ error }}</div>
     {% endif %}
-    <div class="form-group">
-        <small class="form-text warning" id="hint"></small>
-    </div>
-    
-    <div class="container">
+    <div class="container con-form">
         <form action="/register" method="post">
-            <div class="row">
-                <div class="col">帳號：</div><div class="col"></div>
-            </div>
+            <div class="row">帳號：<span class="text-primary" id="hintuser"></span></div>
             <div class="row">
                 {{ username() }}
                 {{ small("長度限制8-16字，至少包含1個英文與1個數字") }}
             </div>
+            <div class="row">email：<span class="text-primary" id="hintemail"></span></div>
             <div class="row">
-                <div class="col">email：</div><div class="col"></div>
-            </div>
-            <div class="row">
-                <input autocomplete="off" class="form-control" name="email" id="email" 
-                type="email" placeholder="輸入email" required>
+                <input autocomplete="off" class="form-control" name="email" id="email" required
+                type="email" placeholder="輸入email">
                 {{ small("註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能") }}
             </div>
-            <div class="row">
-                <div class="col">密碼：</div><div class="col"></div>
-            </div>
+            <div class="row">密碼：<span class="text-primary" id="hintpassword"></span></div>
             <div class="row">
                 {{ password("password","password","輸入密碼") }}
             </div>
@@ -40,78 +30,91 @@
                 {{ password("confirmation","confirmation","確認密碼") }}
                 {{ small("長度限制8-24字，至少包含1個英文與1個數字") }}
             </div>
-            <div class="row" style="margin-top: 1em; margin-bottom: 1em;">
-                {{ button("submit","submit","登入") }}
+            
+            <div class="row row-btn">
+                {{ button("submit","submit","註冊") }}
             </div>
+            
             <div class="row">
-                <small>已經擁有帳號？<a href="/login">登入</a></small><br>
-            </div>
-            <div class="row">
-                <small><a href="/">回首頁</a></small>
+                <small>已經擁有帳號？<a href="/login">登入</a> || <a href="/">回首頁</a></small>
             </div>
         </form>
     </div>
 
     <script>
-        $($("#hint").hide());
-
         $("#username").on("change", function() {
             var username = $(this).val();
-            $.ajax({
-                type: "GET",
-                url: "/checkUser",
-                data: {"username": username},
-                dataType: "json",
-                contentType : "application/json",
-                success: function(result){
-                    if (result == "nameContFail") {
-                        $("#hint").show().html("帳號內容不符合規範");
-                        $("#submit").attr("disabled", true);
-                    }
-                    else if (result == "userExist") {
-                        $("#hint").show().html("這個帳號名稱已經有人使用過了，請換一個");
-                        $("#submit").attr("disabled", true);
-                    }
-                    else if (result == "lenFail") {
-                        $("#hint").show().html("帳號長度不符合規範");
-                        $("#submit").attr("disabled", true);
-                    }
-                    else {
-                        $("#hint").hide();
-                        $("#submit").attr("disabled", false);
-                    }
-                },
-            });
+            if (username) {
+                    $.ajax({
+                    type: "GET",
+                    url: "/checkUser",
+                    data: {"username": username},
+                    dataType: "json",
+                    contentType : "application/json",
+                    success: function(result){
+                        if (result == "nameContFail") {
+                            $("#hintuser").html("帳號內容不符合規範");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else if (result == "userExist") {
+                            $("#hintuser").html("這個帳號名稱已經有人使用過了，請換一個");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else if (result == "lenFail") {
+                            $("#hintuser").html("帳號長度不符合規範");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else {
+                            $("#hintuser").html("");
+                            $("#submit").attr("disabled", false);
+                        }
+                    },
+                });
+            }
+            else {
+                $("#hintuser").html("請輸入帳號");
+                $("#submit").attr("disabled", true);
+            }
         })
 
         $("#email").on("change", function() {
             var email = $("#email").val();
-            $.ajax({
-                type: "GET",
-                url: "/mailValidate",
-                data: {"maddress": email},
-                dataType: "json",
-                contentType : "application/json",
-                success: function(result) {
-                    if (result == "mailExist") {
-                        $("#hint").show().html("輸入的email已經被使用過了");
-                        $("#submit").attr("disabled", true);
-                    }
-                    else if (result == "mailFail") {
-                        $("#hint").show().html("輸入的email無效，請檢查拼字、或是確認這個email的有效性");
-                        $("#submit").attr("disabled", true);
-                    }
-                    else {
-                        $("#hint").hide();
-                        $("#submit").attr("disabled", false);
-                    }
-                },
-            });
+            if (email) {
+                $.ajax({
+                    type: "GET",
+                    url: "/mailValidate",
+                    data: {"maddress": email},
+                    dataType: "json",
+                    contentType : "application/json",
+                    success: function(result) {
+                        if (result == "mailExist") {
+                            $("#hintemail").html("輸入的email已經被使用過了");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else if (result == "mailFail") {
+                            $("#hintemail").html("輸入的email無效，請檢查拼字、或確認email的有效性");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else {
+                            $("#hintemail").html("");
+                            $("#submit").attr("disabled", false);
+                        }
+                    },
+                });
+            }
+            else {
+                $("#hintemail").html("請輸入email");
+                $("#submit").attr("disabled", true);
+            }
         });
 
         $("#password, #confirmation").on("change", function() {
             var password = $("#password").val();
             var confirmation = $("#confirmation").val();
+            if (!password || !confirmation) {
+                $("#hintpassword").html("請輸入密碼與確認密碼");
+                $("#submit").attr("disabled", true);
+            }
             if (password == confirmation) {
                 $.ajax({
                     url: "/checkPass",
@@ -121,22 +124,22 @@
                     contentType : "application/json",
                     success: function(result) {
                         if (result == "nameContFail") {
-                            $("#hint").show().html("密碼內容不符合規範");
+                            $("#hintpassword").html("密碼內容不符合規範");
                             $("#submit").attr("disabled", true);
                         }
                         else if (result == "lenFail") {
-                            $("#hint").show().html("密碼長度不符合規範");
+                            $("#hintpassword").html("密碼長度不符合規範");
                             $("#submit").attr("disabled", true);
                         }
                         else {
-                            $("#hint").hide();
+                            $("#hintpassword").html("");
                             $("#submit").attr("disabled", false);
                         }
                     },
                 });
             }
             else {
-                $("#hint").show().html("密碼與確認密碼的內容不同");
+                $("#hintpassword").html("密碼與確認密碼的內容不同");
                 $("#submit").attr("disabled", true);
             }
         });

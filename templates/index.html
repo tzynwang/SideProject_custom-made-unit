@@ -1,41 +1,52 @@
 {% extends "layout.html" %}
 
-{% block title %}
+{% block title -%}
     狀態
-{% endblock %}
+{%- endblock %}
 
 {% block nav %}
     {% include "nav.html" %}
 {% endblock %}
 
 {% block main %}
-    {% if not session.verified %}
-        <p>帳號"{{ username }}"還沒被啟動，請至{{ email }}收信，點擊信中提供的網址來啟動帳號</p>
-        <span id="AuthMail" class="p-mimic">沒有收到認證信？請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件</span>
-    {% else %}
-        {% if not session.targetamount %}
-            <p>還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定</p>
-            <br>
+    <div class="container con-form">
+        {% if not session.verified %}
+        <div class="row">
+            帳號"{{ username }}"還沒被啟動，請至{{ email }}收信，點擊信中提供的網址來啟動帳號。
+            <span id="AuthMail">沒有收到認證信？請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件。</span>
+        </div>
         {% else %}
-            <span class="p-mimic">
+            {% if not session.targetamount %}
+            <div class="row">
+                還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定。
+            </div>
+            {% else %}
+            <div class="row">
+                <span id="current">本月</span>的累積消費金額為：<span class="text-primary" id="monthBill">{{ amount }}</span>元，
+                <span id="targets">大約是<span id="percentage" class="text-primary">{{ percentage }}</span>
+                {%- for item in targets -%}
+                    <span class="text-primary">{{ item }}</span>
+                {%- endfor -%}
+                。</span>
+            </div>
+            <div class="row" style="margin-top: 1em;">
+                查詢其他月份：
+            </div>
+            <div class="row">
                 <input class="form-control" type="month" id="calender">
-                <span id="current">(本月)</span>的累積消費金額為：<span id="monthBill">{{ amount }}</span>元
-            </span>
-            <span id="targets" class="p-mimic">，大約是<span id="percentage">{{ percentage }}</span>
-                {% for item in targets -%}
-                    <span class="p-mimic">{{ item }}</span>
-                {%- endfor %}
-            </span>
+            </div>
+            {% endif %}
         {% endif %}
-    {% endif %}
+    </div>
 
     <script>
         $("#sendAuthMail").on("click", function() {
             $("#AuthMail").text("重新確認中……");
         });
 
+        // set calender time
         var thisMonth = null;
-        $(function() { // set calender time
+        $(function() {
             var t = new Date();
             var YYYY = t.getFullYear();
             var MM = t.getMonth()+1; // getMonth() is zero-based
@@ -52,10 +63,12 @@
             var date = $("#calender").val();
             
             if (date == thisMonth) {
-                $("#current").text("(本月)");
+                $("#current").text("本月");
             }
             else {
-                $("#current").text("");
+                var t = new Date($("#calender").val());
+                var MM = t.getMonth()+1;
+                $("#current").text(MM+"月");
             }
 
             if (date == "") {

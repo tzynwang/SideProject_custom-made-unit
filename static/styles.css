@@ -2,22 +2,38 @@
     margin-top: 0.5em;
 }
 
+.row-btn {
+    /* set specific margin for the button's div row*/
+    margin-top: 1em; 
+    margin-bottom: 1em;
+}
+
 .btn, .btn-primary {
     /* overwrite bootstrap setting*/
     font-weight: 100;
 }
 
-/* welcome.html */
+.pretty {
+    /* set top margin */
+    margin-top: 0.5em;
+}
+
+/* welcome/view.html */
+.con-index {
+    max-width: 960px;
+    flex-wrap: wrap;
+}
 .card > * {
     margin: auto;
+    text-align: center;
 }
 .card-img-top {
     width: 100%;
     height: auto;
 }
 
-/* login.html */
-.container {
+/* login/register/add.html */
+.con-form {
     max-width: 540px;
 }
 

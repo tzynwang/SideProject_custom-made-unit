@@ -9,64 +9,97 @@
 {% endblock %}
 
 {% block main %}
+    
+<div class="container con-index">
     <div class="" role="alert" id="hintBox"><span id="hintText"></span></div>
-
-    <div id="search">
-        <input class="form-control" type="date" name="start" id="start" onchange="setMin()">
-        至
-        <input class="form-control" type="date" name="end" id="end">
-        {% for k, v in groupName %}
-        <div class="pretty p-default p-round" name="selectedGroup">
-            <input type="checkbox" value="{{ v }}" id="{{ k }}" checked>
-            <div class="state p-primary-o">
-                <label for="{{ k }}">{{ v }}</label>
+    <div class="row">
+        ## date selector part
+        <div class="col" id="search" style="max-width: 50%;">
+            <div class="row">
+                <div class="pretty p-default p-round">
+                    <input class="form-control" type="radio" name="dateSelect" value="thisday">
+                    <div class="state p-primary-o"><label>本日</label></div>
+                </div>
+                <div class="pretty p-default p-round">
+                    <input class="form-control" type="radio" name="dateSelect" value="thisweek">
+                    <div class="state p-primary-o"><label>本週</label></div>
+                </div>
+                <div class="pretty p-default p-round">
+                    <input class="form-control" type="radio" name="dateSelect" value="thismonth">
+                    <div class="state p-primary-o"><label>本月</label></div>
+                </div>
+                <div class="pretty p-default p-round">
+                    <input class="form-control" type="radio" name="dateSelect" value="userselect">
+                    <div class="state p-primary-o"><label>自選區間</label></div>
+                </div>
+            </div>
+            <div class="row" id="dateselector" style="display: block; max-width: 50%;">
+                <div class="row"><input class="form-control" type="date" name="start" id="start"></div>
+                <div class="row"><input class="form-control" type="date" name="end" id="end"></div>
+            </div>
+            <div class="row">
+                {% for k, v in groupName %}
+                <div class="pretty p-default p-round" name="selectedGroup">
+                    <input type="checkbox" value="{{ v }}" id="{{ k }}" checked>
+                    <div class="state p-primary-o">
+                        <label for="{{ k }}">{{ v }}</label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="row row-btn">
+                <button class="btn btn-primary" type="button" id="sendTime">篩選</button>
             </div>
         </div>
-        {% endfor %}
 
-        <button class="btn btn-primary" type="button" onclick="sendTime()">篩選</button>
+        ## edit part
+        <div class="col" id="editForm" style="max-width: 50%;">
+            <div class="row"><input class="form-control" type="date" id="ediDate"></div>
+            <div class="row">
+                <select class="form-control" id="ediGroup">
+                    <option selected value="">組別</option>
+                    {% for k, v in groupName %}
+                    <option value="{{ k }}">{{ v }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row">
+                <input class="form-control" type="text" id="ediNote" maxlength="32" size="32" placeholder="花費內容 (最多32字)" autocomplete="off">
+            </div>
+            <div class="row">
+                <input class="form-control" type="number" id="ediAmount" min="1"placeholder="金額" autocomplete="off">
+            </div>
+            <div class="row row-btn">
+                <div class="col"><button class="btn btn-primary btn-block" id="toUpdate" style="margin-right: 1em;">修改</button></div>
+                <div class="col"><button class="btn btn-secondary btn-block" style="margin-right: 1em;" onclick="cancelEdit()">算了</button></div>
+                <div class="col"><button class="btn btn-light btn-block" id="trashIcon" data-toggle="modal" data-target="#deleteConfirm">刪除</button></div>
+            </div>
+        </div>
     </div>
     
-    <br>
-    <div id="editForm">
-        <input class="form-control" type="date" id="ediDate">
-        <select class="form-control" id="ediGroup">
-            <option selected value="">組別</option>
-            {% for k, v in groupName %}
-            <option value="{{ k }}">{{ v }}</option>
-            {% endfor %}
-        </select>
-        <input class="form-control" type="text" id="ediNote" maxlength="32" size="32" 
-        placeholder="花費內容 (最多32中文字)" autocomplete="off">
-        <input class="form-control" type="number" id="ediAmount" min="1" style="width: 7em" 
-        placeholder="金額" autocomplete="off">
-        
-        <button class="btn btn-primary" id="toUpdate">修改</button>
-        <button class="btn btn-secondary" onclick="cancelEdit()">算了</button>
-        <i class="fas fa-trash-alt fa-lg" id="trashIcon" style="color:#6c757d" 
-        data-toggle="modal" data-target="#deleteConfirm"></i>
+    ## table part
+    <div class="row" style="margin-top: 2em;">
+        <table class="table table-sm" id="result">
+            <thead>
+                <th scope="col" class="descend" id="sortDate" onclick="sortRow(0, 'sortDate')">
+                    日期
+                    <i class="fas fa-sort fa-sm"></i>
+                </th>
+                <th scope="col">組別</th>
+                <th scope="col">花費內容</th>
+                <th scope="col" class="ascend" id="sortAmount" onclick="sortRow(3, 'sortAmount')">
+                    金額
+                    <i class="fas fa-sort fa-sm"></i>
+                </th>
+            </thead>
+            <tbody id="row"></tbody>
+            <tfoot id="subTotal"></tfoot>
+        </table>
+        ## flag for sorting
+        <input type="hidden" id="order" value="asc">
     </div>
-    <br>
 
-    <table class="table table-sm" id="result">
-        <thead>
-            <th scope="col" class="descend" id="sortDate" onclick="sortRow(0, 'sortDate')">
-                日期
-                <i class="fas fa-sort fa-sm"></i>
-            </th>
-            <th scope="col">組別</th>
-            <th scope="col">花費內容</th>
-            <th scope="col" class="ascend" id="sortAmount" onclick="sortRow(3, 'sortAmount')">
-                金額
-                <i class="fas fa-sort fa-sm"></i>
-            </th>
-        </thead>
-        <tbody id="row"></tbody>
-        <tfoot id="subTotal"></tfoot>
-    </table>
-    <input type="hidden" id="order" value="asc">
-
-    {# delete row confirm dialog box #}
+    ## delete row confirm dialog box
     <div class="modal fade" id="deleteConfirm" tabindex="-1" role="dialog" aria-labelledby="deleteRowLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -82,15 +115,13 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closed">算了</button>
-                    <button type="button" class="btn btn-primary" onclick="deleteBill()">確定刪除</button>
+                    <button type="button" class="btn btn-primary" id="deleteBill">確定刪除</button>
                 </div>
             </div>
         </div>
-    </div>
+    </div>    
+</div>
 
-    <footer>
-        Icons by <a href="https://fontawesome.com/">fontawesome.com</a> is licensed under <a href="https://fontawesome.com/license">CC BY 4.0</a>
-    </footer>
-    
-    <script src="/static/view-js.js?version=16"></script>
+<script src="/static/view-js.js?version=22"></script>
+
 {% endblock %}

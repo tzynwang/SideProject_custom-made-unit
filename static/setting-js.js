@@ -1,60 +1,61 @@
-$(document).ready(
-	$("#hintBox").hide()
-);
-
-function updateTargets(updateID) {
-	var t = $("#"+updateID).val();
-	if (!t) {
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-warning").show();
-		$("#hintText").html("請輸入內容");
+$("#updateTargets").on("click", function() {
+	var targetAmount = $("#targetAmount").val();
+	var target = $("#target").val();
+	var targetUnit = $("#targetUnit").val();
+	if (!targetAmount && !target && !targetUnit) {
+		$("#hintT").text("請至少輸入一項更新內容");
+		return false
 	}
-	else if (updateID == 'targetAmount' && (t < 1 || t > 2147483647)) {
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-warning").show();
-		$("#hintText").html("目標金額至少為1");
+	if (targetAmount < 1 || targetAmount > 2147483647) {
+		$("#hintT").text("金額至少為1");
+		return false
 	}
-	else if (updateID == 'target' && t.length > 24) {
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-warning").show();
-		$("#hintText").html("目標最多24個字");
+	if (target.length > 24) {
+		$("#hintT").text("目標物名稱最多24個字");
+		return false
 	}
-	else if (updateID == 'targetUnit' && t.length > 8) {
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-warning").show();
-		$("#hintText").html("單位最多8個字");
+	if (targetUnit.length > 8) {
+		$("#hintT").text("單位名稱最多24個字");
+		return false
 	}
-	else {
-		$("#hintBox").hide();
-		$.ajax({
-			url: "/updateTarget",
-			type: "POST",
-			data: JSON.stringify({"tType": updateID, "content": t}),
-			dataType: "json",
-			contentType : "application/json; charset=UTF-8'",
-			success: function (result) {
-				$("#hintBox").attr("class");
-				$("#hintText").html("更新成功");
-				$("#hintBox").attr("class", "alert alert-success").show().delay(3000).fadeOut();
-				
-				$("#"+updateID).val("");
-				$("#"+updateID+"Span").html(result);
+	$.ajax({
+		url: "/updateTarget",
+		type: "POST",
+		data: JSON.stringify({"targetAmount": targetAmount, "target": target, "targetUnit": targetUnit}),
+		dataType: "json",
+		contentType : "application/json; charset=UTF-8'",
+		success: function (result) {
+			if (!result || result == false) {
+				$("#hintT").text("更新失敗");
 			}
-		});
-	}
-}
+			else {
+				if (result["targetAmount"]) {
+					$("#targetAmountSpan").text(result["targetAmount"]);
+					$("#targetAmount").val("");
+				}
+				if (result["target"]) {
+					$("#targetSpan").text(result["target"]);
+					$("#target").val("");
+				}
+				if (result["targetUnit"]) {
+					$("#targetUnitSpan").text(result["targetUnit"]);
+					$("#targetUnit").val("");
+				}
+				$("#hintT").text("更新成功").show().delay(3000).fadeOut();
+			}
+		}
+	});
+});
 
-function updateName() {
-	var updateName = $("#updateName").val();
+$("#updateName").on("click", function() {
+	var updateName = $("#groupName").val();
 	var selectGroup = $("#gNames").val();
 
 	if (!updateName || !selectGroup) {
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-warning").show();
-		$("#hintText").html("請選擇組別並輸入欲更新之名稱");
+		$("#hintG").text("請選擇組別並輸入欲更新之名稱");
 	}
 	else {
-		$("#hintBox").hide();
+		$("#hintG").text("");
 		$.ajax({
 			url: "/updateGroupName",
 			type: "POST",
@@ -63,41 +64,32 @@ function updateName() {
 			contentType : "application/json; charset=UTF-8'",
 			success: function(result) {
 				if (result == false) {
-					$("#hintText").html("分組名稱更新失敗");
-					$("#hintBox").attr("class");
-					$("#hintBox").attr("class", "alert alert-danger").show().delay(3000).fadeOut();
+					$("#hintG").text("分組名稱更新失敗").show().delay(3000).fadeOut();
 				}
 				else {                           
-					$("#hintText").html("分組名稱更新成功");
-					$("#hintBox").attr("class");
-					$("#hintBox").attr("class", "alert alert-success").show().delay(3000).fadeOut();
+					$("#hintG").text("分組名稱更新成功").show().delay(3000).fadeOut();
 					
 					for (i = 0; i < 4; i ++) {
 						$("#op"+i).text(result[i]);
 					}
 					
-					$("#updateName").val("");
+					$("#groupName").val("");
 				}  
 			},
 		});
 	}
-}
+})
 
-function updatePass() {
+$("#updatePass").on("click", function() {
 	var pass1 = $('#pass1').val();
 	var pass2 = $('#pass2').val();
 	if (!pass1 || !pass2) {
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-success").show();
-		$("#hintText").html("請輸入密碼與確認密碼");
+		$("#hintP").text("請輸入密碼與確認密碼");
 	}
 	else if (pass1 != pass2) { 
-		$("#hintBox").attr("class");
-		$("#hintBox").attr("class", "alert alert-success").show();
-		$("#hintText").html("密碼與確認密碼的內容不同");
+		$("#hintP").text("密碼與確認密碼的內容不同");
 	}
 	else if (pass1 == pass2) {
-		$("#hintBox").hide();
 		$.ajax({
 			url: "/checkPass",
 			type: "POST",
@@ -106,17 +98,12 @@ function updatePass() {
 			contentType : "application/json",
 			success: function(result) {
 				if (result == "nameContFail") {
-					$("#hintBox").attr("class");
-					$("#hintBox").attr("class", "alert alert-success").show();
-					$("#hintText").html("密碼內容不符合規範");
+					$("#hintP").text("密碼內容不符合規範");
 				}
 				if (result == "lenFail") {
-					$("#hintBox").attr("class");
-					$("#hintBox").attr("class", "alert alert-success").show();
-					$("#hintText").html("密碼長度不符合規範");
+					$("#hintP").text("密碼長度不符合規範");
 				}
 				if (result == true) {
-					$("#hintBox").hide();
 					$.ajax({
 						url: "/updatePass",
 						type: "POST",
@@ -127,18 +114,14 @@ function updatePass() {
 							$('#pass1').val("");
 							$('#pass2').val("");
 							
-							$("#hintText").html("密碼更新成功");
-							$("#hintBox").attr("class");
-							$("#hintBox").attr("class", "alert alert-success").show().delay(3000).fadeOut();
+							$("#hintP").text("密碼更新成功").show().delay(3000).fadeOut();
 						},
 						error: function() {
-							$("#hintText").html("密碼更新失敗");
-							$("#hintBox").attr("class");
-							$("#hintBox").attr("class", "alert alert-danger").show().delay(3000).fadeOut();
+							$("#hintP").text("密碼更新失敗").show().delay(3000).fadeOut();
 						}
 					});
 				}
 			},
 		});
 	}
-}
+});

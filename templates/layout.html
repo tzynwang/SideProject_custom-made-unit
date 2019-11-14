@@ -21,6 +21,9 @@
         <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet">
         <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
+        <!--https://momentjs.com/-->
+        <script src="/static/moment.js"></script>
+        
         <!--Font Awesome Kit-->
         <script src="https://kit.fontawesome.com/56b9042c9a.js" crossorigin="anonymous"></script>
 
@@ -31,7 +34,7 @@
         <link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet">
 
         <!--customize CSS-->
-        <link href="/static/styles.css?version=59" rel="stylesheet" type="text/css">
+        <link href="/static/styles.css?version=65" rel="stylesheet" type="text/css">
         
         <title>你與○○的距離：{% block title %}{% endblock %}</title>
     </head>
@@ -40,7 +43,7 @@
 
         {% block nav %}{% endblock %}
 
-        <main class="container p-5"> ##<main class="container p-5"></main>
+        <main class="container p-5">
             {% block main %}{% endblock %}
         </main>
 

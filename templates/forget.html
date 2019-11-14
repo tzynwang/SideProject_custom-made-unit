@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% from "macro.html" import button %}
 
-{% block title %}
+{% block title -%}
     重置密碼
-{% endblock %}
+{%- endblock %}
 
 {% block main %}
     {% if error %}
@@ -11,14 +11,16 @@
             {{ error }}
         </div>
     {% endif %}
-    <p>請在以下欄位輸入帳號或信箱，你會收到一封可以重新設定密碼的email：</p>
-    <form action="/forget" method="post">
-        <div class="form-group">
-            <input autocomplete="off" class="form-control" name="input" 
-            minlength="8" type="text" placeholder="帳號或信箱" required>
-        </div>
-        <div class="form-group">
-            {{ button("submit","submit","送出") }}
-        </div>
-    </form>
+    <div class="container con-form">
+        <div class="row"><span>請在以下欄位輸入帳號或信箱，你會收到一封可以重新設定密碼的email：</span></div>
+        <form action="/forget" method="post">
+            <div class="row">
+                <input autocomplete="off" class="form-control" name="input" 
+                minlength="8" type="text" placeholder="帳號或信箱" required>
+            </div>
+            <div class="row row-btn">
+                {{ button("submit","submit","送出") }}
+            </div>
+        </form>
+    </div>
 {% endblock %}

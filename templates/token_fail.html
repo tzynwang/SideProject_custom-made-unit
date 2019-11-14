@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 
 {% block title -%}
-    已送信
+    送信失敗
 {%- endblock %}
 
 {% block main %}
     <div class="container con-form">
-        <div class="row"><span>{{ error }}</span></div>
+        <div class="row"><span>無法連續發送認證email，請等待{{ error }}後再試一次，謝謝。</span></div>
         <div class="row row-btn"><button class="btn btn-primary" onclick="location.href='/'">回首頁</button></div>
     </div>
 {% endblock %}
