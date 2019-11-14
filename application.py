@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
 from email_validator import EmailNotValidError, validate_email
-from helpers import conn, connection, CheckMail, CheckInput, CheckLen, LoginRequired, NewUser, ToStar
+from helpers import CheckMail, CheckInput, CheckLen, LoginRequired, NewUser, ToStar
 
 import json
 import psycopg2
@@ -27,7 +27,29 @@ app.config["MAIL_USERNAME"] = "custom.made.unit@gmail.com"
 app.config["MAIL_PASSWORD"] = "rinyukarine"
 mail = Mail(app)
 
-app.jinja_env.line_comment_prefix = '##'
+app.jinja_env.line_comment_prefix = "##"
+
+# connection error handling
+try:
+    conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
+                            password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
+                            host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
+    connection = conn.cursor()
+except psycopg2.InterfaceError:
+    try:
+        connection.close()
+        connection = conn.cursor()
+    except:
+        conn.close()
+        conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
+                                password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
+                                host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
+        connection = conn.cursor()
+
+
+@app.route("/welcome")
+def welcome():
+    return render_template("welcome.html", error=None)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -91,7 +113,6 @@ def register():
             html = message
         )
         mail.send(msg)
-
         return redirect(url_for("index"))
     else:
         return render_template("register.html", error=None)
@@ -320,7 +341,7 @@ def password():
             session["error"] = "請輸入密碼與確認密碼"
             return render_template("password.html")
         elif CheckInput(password) is False or CheckLen(password, 8, 24) is False:
-            session["error"] = "密碼不符合規範，長度為8-24個字元，至少包含1英文字母、1數字。"
+            session["error"] = "密碼不符合規範：8-24個字元，至少包含1英文字母、1數字。"
             return render_template("password.html")
         elif password != confirmation:
             session["error"] = "兩次輸入的密碼內容不同，請檢查。"
@@ -443,7 +464,6 @@ def view():
     connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
     row = connection.fetchone()
     groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]} # for bill edit usage
-
     return render_template("view.html", groupName=groupName.items())
     
     
@@ -596,6 +616,11 @@ def logout():
     return redirect("/")
 
 
-@app.route("/welcome")
-def welcome():
-    return render_template("welcome.html", error=None)
+@app.errorhandler(404)
+def error404(error):
+    return render_template("error.html", code=404), 404
+
+
+@app.errorhandler(500)
+def error500(error):
+    return render_template("error.html", code=500), 500

@@ -11,9 +11,17 @@
 {% block main %}
     <div class="container con-form">
         {% if not session.verified %}
+        <div class="row border-bottom">
+            <p>
+                帳號<span class="text-primary">{{ username -}}</span>還沒被啟動，<br>
+                請至<span class="text-primary">{{ email }}</span>收信，點擊信中的網址來啟動帳號。
+            </p>
+        </div>
         <div class="row">
-            帳號"{{ username }}"還沒被啟動，請至{{ email }}收信，點擊信中提供的網址來啟動帳號。
-            <span id="AuthMail">沒有收到認證信？請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件。</span>
+            <p>
+                <span id="AuthMail">沒有收到認證信？<br>
+                請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件。</span>
+            </p>
         </div>
         {% else %}
             {% if not session.targetamount %}
@@ -22,18 +30,19 @@
             </div>
             {% else %}
             <div class="row">
-                <span id="current">本月</span>的累積消費金額為：<span class="text-primary" id="monthBill">{{ amount }}</span>元，
-                <span id="targets">大約是<span id="percentage" class="text-primary">{{ percentage }}</span>
-                {%- for item in targets -%}
-                    <span class="text-primary">{{ item }}</span>
-                {%- endfor -%}
-                。</span>
+                <span id="withMonth">
+                    <span id="current">本月</span>的累積消費金額為：<span class="text-primary" id="monthBill">{{ amount }}</span>元。<br>
+                    <span id="targets">大約是<span id="percentage" class="text-primary">{{ percentage }}</span>
+                    {%- for item in targets -%}
+                        <span class="text-primary">{{ item }}</span>
+                    {%- endfor -%}
+                    。</span>
+                </span>
+                <span id="noMonth"></span>
             </div>
             <div class="row" style="margin-top: 1em;">
-                查詢其他月份：
-            </div>
-            <div class="row">
-                <input class="form-control" type="month" id="calender">
+                查詢其他月份：<br>
+                <input class="form-control" type="month" id="calender" style="margin-top: 0.2em;">
             </div>
             {% endif %}
         {% endif %}
@@ -63,17 +72,22 @@
             var date = $("#calender").val();
             
             if (date == thisMonth) {
+                $("#withMonth").show();
                 $("#current").text("本月");
+                $("#noMonth").text("");
             }
             else {
                 var t = new Date($("#calender").val());
                 var MM = t.getMonth()+1;
+                $("#withMonth").show();
                 $("#current").text(MM+"月");
+                $("#noMonth").text("");
             }
 
             if (date == "") {
+                $("#noMonth").text("請選擇查詢月份↓");
                 $("#monthBill, #percentage").text("0");
-                $("#targets").hide();
+                $("#targets, #withMonth").hide();
             }
             else {
                 $.ajax({

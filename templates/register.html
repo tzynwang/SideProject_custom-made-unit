@@ -7,7 +7,9 @@
 
 {% block main %}
     {% if error %}
+    <div class="container con-form">
         <div class="alert alert-warning" role="alert">{{ error }}</div>
+    </div>
     {% endif %}
     <div class="container con-form">
         <form action="/register" method="post">

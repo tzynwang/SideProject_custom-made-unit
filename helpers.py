@@ -10,11 +10,22 @@ from flask_session import Session
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from email_validator import validate_email, EmailNotValidError
 
-
-conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
-                        password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
-                        host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
-connection = conn.cursor()
+# connection error handling
+try:
+    conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
+                            password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
+                            host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
+    connection = conn.cursor()
+except psycopg2.InterfaceError:
+    try:
+        connection.close()
+        connection = conn.cursor()
+    except:
+        conn.close()
+        conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
+                                password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
+                                host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
+        connection = conn.cursor()
 
 
 def CheckInput(inputText):
