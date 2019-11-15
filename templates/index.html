@@ -24,9 +24,18 @@
             </p>
         </div>
         {% else %}
+            {% if request.args.get("verify") %}
+            <div class="row">
+                <p class="text-primary">帳號認證完成(ゝ∀･)b</p>
+            </div>
+            {% endif %}
+
             {% if not session.targetamount %}
             <div class="row">
-                還沒設定目標金額？<a href="/setting#targetAmount">點此</a>來進行設定。
+                <p>
+                    還沒設定目標金額？<a href="/setting#unit">點此</a>來進行設定。<br>
+                    <small>設定完成後，首頁才能把您的記帳金額轉換成實際物品唷(ゝ∀･)⌒☆</small>
+                </p>
             </div>
             {% else %}
             <div class="row">
@@ -41,16 +50,24 @@
                 <span id="noMonth"></span>
             </div>
             <div class="row" style="margin-top: 1em;">
-                查詢其他月份：<br>
-                <input class="form-control" type="month" id="calender" style="margin-top: 0.2em;">
+                <span>查詢其他月份記錄：</span>
+                <input class="form-control" type="month" id="calender" style="margin-top: 0.2em; max-width: 50%;">
             </div>
-            {% endif %}
-        {% endif %}
+            {% endif %} ## close session.targetamount
+        {% endif %} ## close session.verified
     </div>
 
     <script>
         $("#sendAuthMail").on("click", function() {
             $("#AuthMail").text("重新確認中……");
+        });
+
+        // hide target if no bill(amount is 0) when page is loaded
+        $(function() {
+            var monthBill = $("#monthBill").val();
+            if (monthBill == ("0" || 0)) {
+                $("#targets").hide();
+            }
         });
 
         // set calender time
@@ -70,7 +87,6 @@
 
         $("#calender").on("change", function() {
             var date = $("#calender").val();
-            
             if (date == thisMonth) {
                 $("#withMonth").show();
                 $("#current").text("本月");

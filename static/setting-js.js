@@ -6,15 +6,15 @@ $("#updateTargets").on("click", function() {
 		$("#hintT").text("請至少輸入一項更新內容");
 		return false
 	}
-	if (targetAmount < 1 || targetAmount > 2147483647) {
+	if (targetAmount && (targetAmount < 1 || targetAmount > 2147483647)) {
 		$("#hintT").text("金額至少為1");
 		return false
 	}
-	if (target.length > 24) {
+	if (target && target.length > 24) {
 		$("#hintT").text("目標物名稱最多24個字");
 		return false
 	}
-	if (targetUnit.length > 8) {
+	if (targetUnit && targetUnit.length > 8) {
 		$("#hintT").text("單位名稱最多24個字");
 		return false
 	}

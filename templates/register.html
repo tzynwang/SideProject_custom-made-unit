@@ -1,5 +1,4 @@
 {% extends "layout.html" %}
-{% from "macro.html" import username,password,button,small %}
 
 {% block title -%}
     註冊
@@ -15,26 +14,29 @@
         <form action="/register" method="post">
             <div class="row">帳號：<span class="text-primary" id="hintuser"></span></div>
             <div class="row">
-                {{ username() }}
-                {{ small("長度限制8-16字，至少包含1個英文與1個數字") }}
+                <input autofocus autocomplete="off" class="form-control" name="username" id="username" 
+                minlength="8" maxlength="16" type="text" placeholder="輸入帳號" required>
+                <small class="form-text text-muted">長度限制8-16字，至少包含1個英文與1個數字</small>
             </div>
             <div class="row">email：<span class="text-primary" id="hintemail"></span></div>
             <div class="row">
                 <input autocomplete="off" class="form-control" name="email" id="email" required
                 type="email" placeholder="輸入email">
-                {{ small("註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能") }}
+                <small class="form-text text-muted">註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能</small>
             </div>
             <div class="row">密碼：<span class="text-primary" id="hintpassword"></span></div>
             <div class="row">
-                {{ password("password","password","輸入密碼") }}
+                <input autocomplete="off" class="form-control" name="password" id="password"
+                minlength="8" maxlength="24" type="password" placeholder="輸入密碼" required>
             </div>
             <div class="row">
-                {{ password("confirmation","confirmation","確認密碼") }}
-                {{ small("長度限制8-24字，至少包含1個英文與1個數字") }}
+                <input autocomplete="off" class="form-control" name="confirmation" id="confirmation"
+                minlength="8" maxlength="24" type="password" placeholder="確認密碼" required>
+                <small class="form-text text-muted">長度限制8-24字，至少包含1個英文與1個數字</small>
             </div>
             
             <div class="row row-btn">
-                {{ button("submit","submit","註冊") }}
+                <button class="btn btn-primary" type="submit" id="submit">註冊</button>
             </div>
             
             <div class="row">

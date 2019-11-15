@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title -%}
-    送信失敗
+    認證未完成
 {%- endblock %}
 
 {% block nav %}
@@ -9,8 +9,15 @@
 {% endblock %}
 
 {% block main %}
-    <div class="container con-form">
-        <div class="row"><span>無法連續發送認證信，請等待{{ error }}後再試一次，謝謝。</span></div>
-        <div class="row row-btn"><button class="btn btn-primary" onclick="location.href='/'">回首頁</button></div>
-    </div>
+    {% if not status %}
+        <p>收到這組token的信箱並沒有註冊過本服務，請回到首頁進行新使用者註冊，謝謝。</p>
+    {% else %}
+        {% if status == "token無效" %}
+            <p>唔……這組token有點問題</p>
+        {% elif status == "token過期" %}
+            <p>非常抱歉，這組token過期了</p>
+        {% endif %}
+        <p>請<a href="/gen_token">點此</a>來發送一封新的認證email，謝謝(`・ω・´)</p>
+    {% endif %}
+
 {% endblock %}

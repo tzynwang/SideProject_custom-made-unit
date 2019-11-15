@@ -49,21 +49,21 @@ except psycopg2.InterfaceError:
 
 @app.route("/welcome")
 def welcome():
-    return render_template("welcome.html", error=None)
+    return render_template("welcome.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("usernameRegister")
-        password = request.form.get("passwordRegister")
-        confirmation = request.form.get("confirmationRegister")
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
         maddress = request.form.get("email")
 
         if not username or not password or not confirmation or not maddress:
             return render_template("register.html", error="註冊資訊有短缺，請填完全部欄位。")
         elif CheckInput(username) is False or CheckLen(username, 8, 16) is False:
-            return render_template("register.html", error="帳號不符合規範：8-24個字元，至少包含1英文字母、1數字。")
+            return render_template("register.html", error="帳號不符合規範：8-16個字元，至少包含1英文字母、1數字。")
         elif NewUser(username) is False:
             return render_template("register.html", error="這個帳號已經被註冊過了，請換一個。")
         elif CheckMail(maddress) == 0:
@@ -128,7 +128,7 @@ def newuser(): #for login
 
 
 @app.route("/mailValidate")
-def mailvalid():
+def mailvalid(): #for register
     maddress = request.args.get("maddress")
     if CheckMail(maddress) == 1:
         return jsonify(True)
@@ -205,7 +205,7 @@ def token():
 @app.route("/gen_token/done")
 def tokendone():
     error = session.get("newtoken")
-    return render_template("token_done.html", error=error)
+    return render_template("token_sent.html", error=error)
 
 
 @app.route("/gen_token/fail")
@@ -216,7 +216,7 @@ def tokenfail():
         waitingtime = str(s)+"秒"
     else:
         waitingtime = str(m)+"分"+str(s)+"秒"
-    return render_template("token_fail.html", error=waitingtime)
+    return render_template("token_sent_fail.html", error=waitingtime)
 
 
 @app.route("/authenticate/<token>")
@@ -225,19 +225,21 @@ def checktoken(token):
     try:
         plaintext = key.loads(token, max_age=1800)
     except SignatureExpired:
-        return render_template("auth.html", status="token過期")
+        return render_template("token_fail.html", status="token過期")
     except BadSignature:
-        return render_template("auth.html", status="token無效")
+        return render_template("token_fail.html", status="token無效")
     
     # check if plaintext(email) exists in db
     connection.execute("SELECT email from users where email = %s", (plaintext,))
     row = connection.fetchone()
     if row[0] is None:
-        return render_template("auth.html", status=None)
+        return render_template("token_fail.html", status=None)
     else:
         connection.execute("UPDATE users SET verified = true WHERE email = %s", (plaintext,))
         conn.commit()
-        return redirect(url_for("index"))
+        session["verified"] = True
+        # 這邊須修正，理想流程：
+        return redirect(url_for("index", verify="true"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -351,9 +353,9 @@ def password():
             connection.execute("UPDATE users SET hash = %s WHERE username = %s", (hashpass,username))
             conn.commit()
             session.clear()
-            return render_template("welcome.html", error="密碼重設成功，請使用新密碼登入，謝謝。")
+            return render_template("password_done.html")
     else:
-        return render_template("password.html") # recirect from reset() BadSignature
+        return render_template("password.html") # redirect from reset() BadSignature
     
 
 @app.route("/")
