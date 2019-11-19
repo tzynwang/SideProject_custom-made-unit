@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block title -%}
+    設定
+{%- endblock %}
+
+{% block nav %}
+    {% include "nav.html" %}
+{% endblock %}
+
+{% block main %}
+
+    <ul class="container con-form nav nav-pills justify-content-center">
+        <li class="nav-item"><a class="nav-link" href="/setting">一般設定</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/setting/account">帳號設定</a></li>
+    </ul>
+    {% if not verification %}
+    <div class="container con-form">
+        {% if error %}
+        <div class="alert alert-warning" role="alert">{{ error }}</div>
+        {% endif %}
+        <form action="/setting/account" method="post">
+            <div class="row">
+                <h4>輸入密碼後，方可修改帳號資料：</h4>
+            </div>
+            <div class="row">
+                <input class="form-control" type="password" autocomplete="off" name="password"
+                minlength="8" maxlength="24" required>
+            </div>
+            <div class="row row-btn">
+                <button class="btn btn-primary" type="submit">確認</button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    ## account info update
+    <div class="container con-form" style="margin-top: 2em;">
+        <div class="row"><h4>更新密碼</h4></div>
+        <small class="text-primary" id="hintP"></small>
+        <div class="row">
+            <input class="form-control" type="password" autocomplete="off" id="pass1"
+            placeholder="輸入新密碼 (長度限制8-24字)" minlength="8" maxlength="24">
+            <input class="form-control" type="password" autocomplete="off" id="pass2"
+            placeholder="確認新密碼 (數字英文各1)" minlength="8" maxlength="24"
+            style="margin-top: 0.2em;">
+        </div>
+        <div class="row row-btn">
+            <button class="btn btn-primary" type="button" id="updatePass">更新</button>
+        </div>
+    </div>
+
+    <div class="container con-form" style="margin-top: 2em;">
+        <div class="row"><h4>更新email</h4></div>
+        <small class="text-primary" id="hintE"></small>
+        <div class="row">目前email：<span id="emailSpan" class="text-primary">{{ email }}</span></div>
+        <div class="row"><span class="text-primary" id="hintemail"></span></div>
+        <div class="row">
+            <input class="form-control" type="email" autocomplete="off" id="email"
+            placeholder="輸入新email">
+        </div>
+        <div class="row row-btn">
+            <button class="btn btn-primary" type="button" id="updateEmail">更新</button>
+        </div>
+    </div>
+
+    <script src="/static/js/setting.js"></script>
+    {% endif %}
+{% endblock %}

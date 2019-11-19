@@ -15,11 +15,11 @@ $("#updateTargets").on("click", function() {
 		return false
 	}
 	if (targetUnit && targetUnit.length > 8) {
-		$("#hintT").text("單位名稱最多24個字");
+		$("#hintT").text("單位名稱最多8個字");
 		return false
 	}
 	$.ajax({
-		url: "/updateTarget",
+		url: "/setting/target",
 		type: "POST",
 		data: JSON.stringify({"targetAmount": targetAmount, "target": target, "targetUnit": targetUnit}),
 		dataType: "json",
@@ -49,32 +49,29 @@ $("#updateTargets").on("click", function() {
 
 $("#updateName").on("click", function() {
 	var updateName = $("#groupName").val();
-	var selectGroup = $("#gNames").val();
-
+	var selectGroup = $("#groupKey").val();
 	if (!updateName || !selectGroup) {
 		$("#hintG").text("請選擇組別並輸入欲更新之名稱");
 	}
 	else {
 		$("#hintG").text("");
 		$.ajax({
-			url: "/updateGroupName",
+			url: "/setting/group",
 			type: "POST",
-			data: JSON.stringify({"gNames": selectGroup, "updateName": updateName}),
+			data: JSON.stringify({"groupKey": selectGroup, "updateName": updateName}),
 			dataType: "json",
 			contentType : "application/json; charset=UTF-8'",
 			success: function(result) {
 				if (result == false) {
 					$("#hintG").text("分組名稱更新失敗").show().delay(3000).fadeOut();
 				}
-				else {                           
+				else {
 					$("#hintG").text("分組名稱更新成功").show().delay(3000).fadeOut();
-					
 					for (i = 0; i < 4; i ++) {
 						$("#op"+i).text(result[i]);
 					}
-					
 					$("#groupName").val("");
-				}  
+				}
 			},
 		});
 	}
@@ -86,12 +83,12 @@ $("#updatePass").on("click", function() {
 	if (!pass1 || !pass2) {
 		$("#hintP").text("請輸入密碼與確認密碼");
 	}
-	else if (pass1 != pass2) { 
+	else if (pass1 != pass2) {
 		$("#hintP").text("密碼與確認密碼的內容不同");
 	}
 	else if (pass1 == pass2) {
 		$.ajax({
-			url: "/checkPass",
+			url: "/check/pass",
 			type: "POST",
 			data: JSON.stringify({"pass1": pass1}),
 			dataType: "json",
@@ -105,7 +102,7 @@ $("#updatePass").on("click", function() {
 				}
 				if (result == true) {
 					$.ajax({
-						url: "/updatePass",
+						url: "/setting/account/pass",
 						type: "POST",
 						data: JSON.stringify({"pass1": pass1}),
 						dataType: "json",
@@ -113,7 +110,7 @@ $("#updatePass").on("click", function() {
 						success: function() {
 							$('#pass1').val("");
 							$('#pass2').val("");
-							
+
 							$("#hintP").text("密碼更新成功").show().delay(3000).fadeOut();
 						},
 						error: function() {
@@ -123,5 +120,50 @@ $("#updatePass").on("click", function() {
 				}
 			},
 		});
+	}
+});
+
+$("#updateEmail").on("click", function() {
+	var email = $("#email").val();
+	if (email) {
+		$.ajax({
+			type: "GET",
+			url: "/check/mail",
+			data: {"email": email},
+			dataType: "json",
+			contentType: "application/json",
+			success: function(result) {
+				if (result == "mailExist") {
+					$("#hintemail").html("輸入的email已經被使用過了");
+					return false;
+				}
+				else if (result == "mailFail") {
+					$("#hintemail").html("輸入的email無效，請檢查拼字、或確認email的有效性");
+					return false
+				}
+				else if (result == true) {
+					$("#hintemail").html("");
+					$.ajax({
+						type: "POST",
+						url: "/setting/account/email",
+						data: JSON.stringify({"email": email}),
+						dataType: "json",
+						contentType: "application/json",
+						success: function() {
+							$("#hintE").text("email更新成功").show().delay(3000).fadeOut();
+							$("#email").val("");
+							$("#emailSpan").text(email);
+						},
+						error: function() {
+							$("#hintE").text("email更新失敗").show().delay(3000).fadeOut();
+						}
+					});
+				}
+			},
+		});
+	}
+	else {
+		$("#hintemail").html("請輸入email");
+		$("#updateEmail").attr("disabled", true);
 	}
 });

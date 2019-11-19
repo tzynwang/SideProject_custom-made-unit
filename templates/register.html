@@ -5,41 +5,47 @@
 {%- endblock %}
 
 {% block main %}
+    <style>
+        html, body {
+            background-color: #808080;
+        }
+    </style>
     {% if error %}
     <div class="container con-form">
         <div class="alert alert-warning" role="alert">{{ error }}</div>
     </div>
     {% endif %}
-    <div class="container con-form">
+    <div class="container con-form welcome-form">
+        <h3 class="text-center">註冊</h3>
         <form action="/register" method="post">
-            <div class="row">帳號：<span class="text-primary" id="hintuser"></span></div>
-            <div class="row">
-                <input autofocus autocomplete="off" class="form-control" name="username" id="username" 
-                minlength="8" maxlength="16" type="text" placeholder="輸入帳號" required>
+            <div class="row">帳號：<span class="text-primary" id="hintUser"></span></div>
+            <div class="row" style="margin-bottom: 1.5em;">
+                <input autofocus autocomplete="off" class="form-control" name="username" id="username"
+                minlength="8" maxlength="16" type="text" required>
                 <small class="form-text text-muted">長度限制8-16字，至少包含1個英文與1個數字</small>
             </div>
-            <div class="row">email：<span class="text-primary" id="hintemail"></span></div>
-            <div class="row">
+            <div class="row">email：<span class="text-primary" id="hintEmail"></span></div>
+            <div class="row" style="margin-bottom: 1.5em;">
                 <input autocomplete="off" class="form-control" name="email" id="email" required
-                type="email" placeholder="輸入email">
+                type="email">
                 <small class="form-text text-muted">註冊後會發送一封email來啟動帳號，啟動後才能使用完整功能</small>
             </div>
-            <div class="row">密碼：<span class="text-primary" id="hintpassword"></span></div>
+            <div class="row">密碼：<span class="text-primary" id="hintPassword"></span></div>
             <div class="row">
                 <input autocomplete="off" class="form-control" name="password" id="password"
-                minlength="8" maxlength="24" type="password" placeholder="輸入密碼" required>
+                minlength="8" maxlength="24" type="password" required>
             </div>
-            <div class="row">
+            <div class="row" style="margin-bottom: 1.5em;">
                 <input autocomplete="off" class="form-control" name="confirmation" id="confirmation"
-                minlength="8" maxlength="24" type="password" placeholder="確認密碼" required>
+                minlength="8" maxlength="24" type="password" required>
                 <small class="form-text text-muted">長度限制8-24字，至少包含1個英文與1個數字</small>
             </div>
-            
+
             <div class="row row-btn">
-                <button class="btn btn-primary" type="submit" id="submit">註冊</button>
+                <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit">註冊</button>
             </div>
-            
-            <div class="row">
+
+            <div style="text-align: center;">
                 <small>已經擁有帳號？<a href="/login">登入</a> || <a href="/">回首頁</a></small>
             </div>
         </form>
@@ -51,32 +57,32 @@
             if (username) {
                     $.ajax({
                     type: "GET",
-                    url: "/checkUser",
+                    url: "/check/user",
                     data: {"username": username},
                     dataType: "json",
                     contentType : "application/json",
                     success: function(result){
                         if (result == "nameContFail") {
-                            $("#hintuser").html("帳號內容不符合規範");
+                            $("#hintUser").html("帳號內容不符合規範");
                             $("#submit").attr("disabled", true);
                         }
                         else if (result == "userExist") {
-                            $("#hintuser").html("這個帳號名稱已經有人使用過了，請換一個");
+                            $("#hintUser").html("這個帳號名稱已經有人使用過了，請換一個");
                             $("#submit").attr("disabled", true);
                         }
                         else if (result == "lenFail") {
-                            $("#hintuser").html("帳號長度不符合規範");
+                            $("#hintUser").html("帳號長度不符合規範");
                             $("#submit").attr("disabled", true);
                         }
                         else {
-                            $("#hintuser").html("");
+                            $("#hintUser").html("");
                             $("#submit").attr("disabled", false);
                         }
                     },
                 });
             }
             else {
-                $("#hintuser").html("請輸入帳號");
+                $("#hintUser").html("請輸入帳號");
                 $("#submit").attr("disabled", true);
             }
         })
@@ -86,28 +92,28 @@
             if (email) {
                 $.ajax({
                     type: "GET",
-                    url: "/mailValidate",
-                    data: {"maddress": email},
+                    url: "/check/mail",
+                    data: {"email": email},
                     dataType: "json",
                     contentType : "application/json",
                     success: function(result) {
                         if (result == "mailExist") {
-                            $("#hintemail").html("輸入的email已經被使用過了");
+                            $("#hintEmail").html("輸入的email已經被使用過了");
                             $("#submit").attr("disabled", true);
                         }
                         else if (result == "mailFail") {
-                            $("#hintemail").html("輸入的email無效，請檢查拼字、或確認email的有效性");
+                            $("#hintEmail").html("輸入的email無效，請檢查拼字、或確認email的有效性");
                             $("#submit").attr("disabled", true);
                         }
                         else {
-                            $("#hintemail").html("");
+                            $("#hintEmail").html("");
                             $("#submit").attr("disabled", false);
                         }
                     },
                 });
             }
             else {
-                $("#hintemail").html("請輸入email");
+                $("#hintEmail").html("請輸入email");
                 $("#submit").attr("disabled", true);
             }
         });
@@ -116,34 +122,34 @@
             var password = $("#password").val();
             var confirmation = $("#confirmation").val();
             if (!password || !confirmation) {
-                $("#hintpassword").html("請輸入密碼與確認密碼");
+                $("#hintPassword").html("請輸入密碼與確認密碼");
                 $("#submit").attr("disabled", true);
             }
             if (password == confirmation) {
                 $.ajax({
-                    url: "/checkPass",
+                    url: "/check/pass",
                     type: "POST",
                     data: JSON.stringify({"pass1": password}),
                     dataType: "json",
                     contentType : "application/json",
                     success: function(result) {
                         if (result == "nameContFail") {
-                            $("#hintpassword").html("密碼內容不符合規範");
+                            $("#hintPassword").html("密碼內容不符合規範");
                             $("#submit").attr("disabled", true);
                         }
                         else if (result == "lenFail") {
-                            $("#hintpassword").html("密碼長度不符合規範");
+                            $("#hintPassword").html("密碼長度不符合規範");
                             $("#submit").attr("disabled", true);
                         }
                         else {
-                            $("#hintpassword").html("");
+                            $("#hintPassword").html("");
                             $("#submit").attr("disabled", false);
                         }
                     },
                 });
             }
             else {
-                $("#hintpassword").html("密碼與確認密碼的內容不同");
+                $("#hintPassword").html("密碼與確認密碼的內容不同");
                 $("#submit").attr("disabled", true);
             }
         });

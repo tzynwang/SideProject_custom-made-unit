@@ -1,10 +1,31 @@
+h3 {
+    /* login/register/forget_pass.html */
+    margin-bottom: 1em;
+}
+
+small {
+    font-weight: 100;
+}
+
+.con-form, .con-index {
+    margin-top: 5%;
+}
+
+.welcome-form
+{
+    padding: 3em;
+    background-color: white;
+    border-radius: 0.5em;
+    box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.1);
+}
+
 .row {
     margin-top: 0.5em;
 }
 
 .row-btn {
     /* set specific margin for the button's div row*/
-    margin-top: 1em; 
+    margin-top: 1em;
     margin-bottom: 1em;
 }
 
@@ -27,40 +48,13 @@
     margin: auto;
     text-align: center;
 }
-.card-img-top {
-    width: 100%;
-    height: auto;
-}
 
-/* login/register/add.html */
+/* login/register/bill_add.html */
 .con-form {
     max-width: 540px;
 }
 
-/* other mics */
-.warning {
-    color: red;
-}
-
+/* bill_view.html */
 .modal-header {
     display: none;
-}
-
-.a-mimic {
-    color: #007bff;
-    text-decoration: none;
-    background-color: transparent;
-}
-
-.a-mimic:hover {
-    color: #0056b3;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-footer {
-    font-size: xx-small;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
 }

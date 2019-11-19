@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block main %}
-    
+
 <div class="container con-index">
     <div class="" role="alert" id="hintBox"><span id="hintText"></span></div>
     <div class="row">
@@ -38,11 +38,11 @@
                 <div class="row"><input class="form-control" type="date" name="end" id="end"></div>
             </div>
             <div class="row">
-                {% for k, v in groupName %}
+                {% for key, value in group_name.items() %}
                 <div class="pretty p-default p-round" name="selectedGroup">
-                    <input type="checkbox" value="{{ v }}" id="{{ k }}" checked>
+                    <input type="checkbox" value="{{ value }}" id="{{ key }}" checked>
                     <div class="state p-primary-o">
-                        <label for="{{ k }}">{{ v }}</label>
+                        <label for="{{ key }}">{{ value }}</label>
                     </div>
                 </div>
                 {% endfor %}
@@ -58,8 +58,8 @@
             <div class="row">
                 <select class="form-control" id="ediGroup">
                     <option selected value="">組別</option>
-                    {% for k, v in groupName %}
-                    <option value="{{ k }}">{{ v }}</option>
+                    {% for key, value in group_name.items() %}
+                    <option value="{{ key }}">{{ value }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -70,13 +70,19 @@
                 <input class="form-control" type="number" id="ediAmount" min="1" max="2147483647" placeholder="金額" autocomplete="off">
             </div>
             <div class="row row-btn">
-                <div class="col"><button class="btn btn-primary btn-block" id="toUpdate" style="margin-right: 1em;">修改</button></div>
-                <div class="col"><button class="btn btn-secondary btn-block" style="margin-right: 1em;" onclick="cancelEdit()">算了</button></div>
-                <div class="col"><button class="btn btn-light btn-block" id="trashIcon" data-toggle="modal" data-target="#deleteConfirm">刪除</button></div>
+                <div class="col">
+                    <button class="btn btn-primary btn-block" id="toUpdate" style="margin-right: 1em;">修改</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-secondary btn-block" style="margin-right: 1em;" onclick="cancelEdit()">算了</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-light btn-block" id="trashIcon" data-toggle="modal" data-target="#deleteConfirm">刪除</button>
+                </div>
             </div>
         </div>
     </div>
-    
+
     ## table part
     <div class="row" style="margin-top: 2em;">
         <table class="table table-sm" id="result">
@@ -119,9 +125,9 @@
                 </div>
             </div>
         </div>
-    </div>    
+    </div>
 </div>
 
-<script src="/static/view-js.js?version=22"></script>
+<script src="/static/js/bill_view.js"></script>
 
 {% endblock %}

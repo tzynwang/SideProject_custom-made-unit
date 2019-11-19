@@ -10,11 +10,16 @@
 
 {% block main %}
 
+    <ul class="container con-form nav nav-pills justify-content-center">
+        <li class="nav-item"><a class="nav-link active" href="/setting">一般設定</a></li>
+        <li class="nav-item"><a class="nav-link" href="/setting/account">帳號設定</a></li>
+    </ul>
+
     ## target setting
     <div class="container con-form">
         <div class="row"><h4 id="unit">目標訂製區</h4></div>
         <small class="text-primary" id="hintT"></small>
-        <div class="row">金額：<span id="targetAmountSpan" class="text-primary">{{ targetAmount }}</span><span>元</span></div>
+        <div class="row">金額：<span id="targetAmountSpan" class="text-primary">{{ target_amount }}</span><span>元</span></div>
         <div class="row">
             <input class="form-control" id="targetAmount" type="number" placeholder="最少為1元" min="1" max="2147483647">
         </div>
@@ -22,7 +27,7 @@
         <div class="row">
             <input class="form-control" id="target" type="text" placeholder="例子：平板" maxlength="24">
         </div>
-        <div class="row">單位：<span id="targetUnitSpan" class="text-primary">{{ targetUnit }}</span></div>
+        <div class="row">單位：<span id="targetUnitSpan" class="text-primary">{{ target_unit }}</span></div>
         <div class="row">
             <input class="form-control" id="targetUnit" type="text" placeholder="例子：臺" maxlength="8">
         </div>
@@ -33,40 +38,24 @@
 
     ## update group
     <div class="container con-form" style="margin-top: 2em;">
-        <div class="row"><h4>更新組別名稱</h4></div>
+        <div class="row"><h4>組別訂製區</h4></div>
         <small class="text-primary" id="hintG"></small>
         <div class="row">
-            <select class="form-control" id="gNames">
+            <select class="form-control" id="groupKey">
                 <option selected disabled value="">選擇組別</option>
-                <option id="op0" value="g0">{{ groupName[0] }}</option>
-                <option id="op1" value="g1">{{ groupName[1] }}</option>
-                <option id="op2" value="g2">{{ groupName[2] }}</option>
-                <option id="op3" value="g3">{{ groupName[3] }}</option>
+                <option id="op0" value="g0">{{ group_name[0] }}</option>
+                <option id="op1" value="g1">{{ group_name[1] }}</option>
+                <option id="op2" value="g2">{{ group_name[2] }}</option>
+                <option id="op3" value="g3">{{ group_name[3] }}</option>
             </select>
             <input class="form-control" id="groupName" type="text" placeholder="輸入自訂名稱" maxlength="24"
             style="margin-top: 0.2em;">
         </div>
         <div class="row row-btn">
-            <button class="btn btn-primary" id="updateName" type="button">更新</button>
+            <button class="btn btn-primary" type="button" id="updateName">設定</button>
         </div>
     </div>
 
-    ## account info update
-    <div class="container con-form" style="margin-top: 2em;">
-        <div class="row"><h4>更新密碼</h4></div>
-        <small class="text-primary" id="hintP"></small>
-        <div class="row">
-            <input class="form-control" type="password" autocomplete="off" id="pass1" 
-            placeholder="密碼 (長度限制8-24字)" minlength="8" maxlength="24">
-            <input class="form-control" type="password" autocomplete="off" id="pass2" 
-            placeholder="確認 (數字英文各1)" minlength="8" maxlength="24"
-            style="margin-top: 0.2em;">
-        </div>
-        <div class="row row-btn">
-            <button class="btn btn-primary" type="button" id="updatePass">更新</button>
-        </div>
-    </div>
-
-    <script src="/static/setting-js.js?version=9"></script>
+    <script src="/static/js/setting.js"></script>
 
 {% endblock %}

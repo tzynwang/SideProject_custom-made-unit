@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title -%}
+    已送信
+{%- endblock %}
+
+{% block main %}
+    <style>
+        html, body {
+            background-color: #808080;
+        }
+    </style>
+    <div class="container con-form welcome-form">
+        <h3 class="text-center">已送信</h3>
+        <div class="row"><p>{{ error | safe }}</p></div>
+        <div class="row row-btn"><button class="btn btn-primary btn-lg btn-block" onclick="location.href='/'">回首頁</button></div>
+    </div>
+{% endblock %}

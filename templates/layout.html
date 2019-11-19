@@ -6,7 +6,7 @@
         <!--Required meta tags-->
         <meta charset="utf-8">
         <meta name="application-name" content="Your Custom-made Unit">
-        <meta name="description" 
+        <meta name="description"
         content="A web accounting app which allows users to measure the distance between their deposits and their targets.">
         <meta name="keywords" content="account app, target">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -22,27 +22,26 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
         <!--https://momentjs.com/-->
-        <script src="/static/moment.js"></script>
-        
+        <script src="/static/js/moment.js"></script>
+
         <!--Font Awesome Kit-->
         <script src="https://kit.fontawesome.com/56b9042c9a.js" crossorigin="anonymous"></script>
 
         <!-- https://favicon.io/emoji-favicons/money-mouth-face/ -->
-        <link href="/static/favicon-face-with-monocle.ico" rel="icon">
+        <link href="/static/img/favicon-face-with-monocle.ico" rel="icon">
 
         <!--pretty-checkbox.css-->
         <link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet">
 
         <!--customize CSS-->
-        <link href="/static/styles.css?version=65" rel="stylesheet" type="text/css">
-        
+        <link href="/static/css/styles.css?version=5" rel="stylesheet" type="text/css">
+
         <title>你與○○的距離：{% block title %}{% endblock %}</title>
     </head>
 
     <body>
-
         {% block nav %}{% endblock %}
-
+        {% block welcome %}{% endblock %}
         <main class="container p-5">
             {% block main %}{% endblock %}
         </main>

@@ -1,103 +1,87 @@
 import os
-import json
-import psycopg2
-import requests
-import urllib.parse
-
 from functools import wraps
-from flask import redirect, render_template, request, session
-from flask_session import Session
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+import psycopg2
+
+from flask import redirect, session
 from email_validator import validate_email, EmailNotValidError
 
-# connection error handling
-try:
-    conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
-                            password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
-                            host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
-    connection = conn.cursor()
-except psycopg2.InterfaceError:
+
+def db_connection():
     try:
-        connection.close()
-        connection = conn.cursor()
-    except:
-        conn.close()
-        conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
-                                password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
-                                host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
-        connection = conn.cursor()
+        db = psycopg2.connect(database=os.environ.get("DB"), user=os.environ.get("DB_USER"),
+                              password=os.environ.get("DB_PASSWORD"),
+                              host=os.environ.get("DB_HOST"), port=os.environ.get("DB_PORT"))
+        connection = db.cursor()
+    except psycopg2.InterfaceError:
+            db.close()
+            db = psycopg2.connect(database=os.environ.get("DB"), user=os.environ.get("DB_USER"),
+                                  password=os.environ.get("DB_PASSWORD"),
+                                  host=os.environ.get("DB_HOST"), port=os.environ.get("DB_PORT"))
+            connection = db.cursor()
+    return connection, db
 
 
-def CheckInput(inputText):
+def new_user(user):
+    conn = db_connection()
+    conn[0].execute("SELECT username from users where username = %s", (user,))
+    row = conn[0].fetchone()
+    if row is None:
+        return True
+    return False
+
+
+def verify_input(input_text):
     alph = 0
     num = 0
-    for i in inputText:
+    for i in input_text:
         if i.isalpha():
             alph = alph +1
         if i.isnumeric():
             num = num +1
     if alph > 0 and num > 0:
         return True
-    else:
-        return False
+    return False
 
 
-def CheckLen(inputText, minimum, maximum):
-    inputLEN = len(str(inputText))
-    if inputLEN >= minimum and inputLEN <= maximum:
+def verify_len(input_text, minimum, maximum):
+    input_len = len(str(input_text))
+    if minimum <= input_len <= maximum:
         return True
-    else:
-        return False
+    return False
 
 
-def NewUser(user):
-    connection.execute("SELECT username from users where username = %s", (user,))
-    row = connection.fetchone()
-    if row is None:
-        return True
-    else:
-        return False
-
-
-def CheckMail(maddress):
+def verify_mail(email):
     try:
-        v = validate_email(maddress)
-        if v != EmailNotValidError:
-            connection.execute("SELECT email from users where email = %s", (maddress,))
-            row = connection.fetchone()
-            if row is None: # new email
-                return 1
-            else: # used email
-                return -1 
+        validated = validate_email(email)
+        if validated != EmailNotValidError:
+            conn = db_connection()
+            conn[0].execute("SELECT email from users where email = %s", (email,))
+            row = conn[0].fetchone()
+            if row is None:
+                return "mail_new"
+            return "mail_existed"
     except EmailNotValidError:
-        return 0
+        return "mail_invalid"
 
 
-def ToStar(mailLocal):
-    if len(str(mailLocal)) <= 3:
-        return str("*"*len(str(mailLocal)))
-    else:
-        starLocal = []
-        for i in range(0, 2):
-            starLocal.append(mailLocal[i])
-        for i in range(2, len(str(mailLocal))-1):
-            starLocal.append("*")
-        starLocal.append(mailLocal[-1])
-        starStr = "".join(starLocal)
-    return starStr
+def to_star(email_local):
+    if len(str(email_local)) <= 3:
+        return str("*"*len(str(email_local)))
+
+    email_local_star = []
+    for i in range(0, 2):
+        email_local_star.append(email_local[i])
+    for i in range(2, len(str(email_local))-1):
+        email_local_star.append("*")
+    email_local_star.append(email_local[-1])
+    email_star = "".join(email_local_star)
+    return email_star
 
 
-def LoginRequired(f):
-    @wraps(f)
+def login_required(function):
+    @wraps(function)
     def decorated_function(*args, **kwargs):
         if session.get("id") is None:
             return redirect("/welcome")
-        return f(*args, **kwargs)
+        return function(*args, **kwargs)
     return decorated_function
-
-
-def GetGroupName(userID):
-    connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
-    return json.dumps(groupName)

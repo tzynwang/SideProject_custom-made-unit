@@ -4,23 +4,59 @@
     歡迎
 {%- endblock %}
 
-{% block main %}
-    <div class="container con-index">
-        <div class="card-deck">
+{% block welcome %}
+    <style>
+        html {
+            background-color: #808080;
+        }
+        .masthead {
+            height: 100vh;
+            background-image: url("/static/img/welcome_img.svg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            }
+    </style>
+    <header class="masthead">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center">
+                <div class="col-12 text-center">
+                    <h1 style="letter-spacing: 0.8em;">對數字毫無概念？</h1>
+                    <h3 style="letter-spacing: 0.4em;">那就把數字變成喜歡的樣子</h3>
+                </div>
+            </div>
+
+        </div>
+    </header>
+    <section class="py-5">
+        <div class="container">
+            <div style="margin-top: 1.5em; margin-bottom: 1.5em; text-align: center;">
+                <h1 style="letter-spacing: 0.8em;" class="text-primary">訂製單位：你與●●的距離</h1>
+                <h3 class="text-muted" style="letter-spacing: 0.2em;">讓目標不再只是一組數字的輕量級網頁記帳APP</h3>
+            </div>
+            <div class="row align-items-center">
+                <button class="btn btn-primary btn-lg btn-block" onclick="location.href='/register'">註冊</button>
+                <button class="btn btn-secondary btn-lg btn-block" onclick="location.href='/login'">登入</button>
+            </div>
+        </div>
+    </section>
+
+    {#<div class="container con-index">
+        <div class="row card-group" style="overflow: hidden;">
             <div class="card">
-                <img class="card-img-top" src="/static/1.png">
+                <img class="card-img-top" src="/static/img/1.png" >
                 <div class="card-body">
                     <h5 class="card-title">對數字毫無概念？</h5>
                 </div>
             </div>
             <div class="card">
-                <img class="card-img-top" src="/static/2.png">
+                <img class="card-img-top" src="/static/img/2.png">
                 <div class="card-body">
                     <h5 class="card-title">那就把數字</h5>
                 </div>
             </div>
             <div class="card">
-                <img class="card-img-top" src="/static/3.png">
+                <img class="card-img-top" src="/static/img/3.png">
                 <div class="card-body">
                     <h5 class="card-title">變成喜歡的樣子</h5>
                 </div>
@@ -35,5 +71,5 @@
         <div class="row">
             <button class="btn btn-secondary btn-lg btn-block" onclick="location.href='/login'">登入</button>
         </div>
-    </div>
+    </div>#}
 {% endblock %}

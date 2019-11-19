@@ -20,7 +20,7 @@
         <div class="row">
             <p>
                 <span id="AuthMail">沒有收到認證信？<br>
-                請<a href="/gen_token" id="sendAuthMail">點此</a>來重新發送帳號認證信件。</span>
+                請<a href="/token/sent" id="sendAuthMail">點此</a>來重新發送帳號認證信件。</span>
             </p>
         </div>
         {% else %}
@@ -30,10 +30,10 @@
             </div>
             {% endif %}
 
-            {% if not session.targetamount %}
+            {% if not session.targets %}
             <div class="row">
                 <p>
-                    還沒設定目標金額？<a href="/setting#unit">點此</a>來進行設定。<br>
+                    還沒設定目標物與金額？<a href="/setting#unit">點此</a>來進行設定。<br>
                     <small>設定完成後，首頁才能把您的記帳金額轉換成實際物品唷(ゝ∀･)⌒☆</small>
                 </p>
             </div>
@@ -53,7 +53,7 @@
                 <span>查詢其他月份記錄：</span>
                 <input class="form-control" type="month" id="calender" style="margin-top: 0.2em; max-width: 50%;">
             </div>
-            {% endif %} ## close session.targetamount
+            {% endif %} ## close session.targets
         {% endif %} ## close session.verified
     </div>
 
@@ -107,7 +107,7 @@
             }
             else {
                 $.ajax({
-                    url: "/queryMonthSum",
+                    url: "/bill/query/month",
                     type: "POST",
                     data: JSON.stringify({"date": date}),
                     dataType: "json",

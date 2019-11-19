@@ -51,10 +51,9 @@ $("#start").on("change", function() {
 
 function sortRow(index, ID) {
 	var tbody = $('#row');
-
 	// find all row(s) in <tbody>, then sort()
 	tbody.find("tr").sort(function (a, b) {
-		if ($("#"+ID).hasClass("ascend") == true) {                    
+		if ($("#"+ID).hasClass("ascend") == true) {
 			// get text of the children element with 'index'
 			return parseInt($(a).children().eq(index).text()) - parseInt($(b).children().eq(index).text());
 		}
@@ -99,7 +98,7 @@ $("#sendTime").on("click", function() {
 	else {
 		// pull record(s) from server side
 		$.ajax({
-			url: "/filter",
+			url: "/bill/filter",
 			type: "POST",
 			data: JSON.stringify({"start":start, "end":end}),
 			dataType: "json",
@@ -114,9 +113,8 @@ $("#sendTime").on("click", function() {
 					$("#hintBox").hide();
 					$("#row").empty();
 					$("#subTotal").empty();
-					$("#result").show();                           
+					$("#result").show();
 					var billSum = 0;
-
 					// render table of record(s)
 					result.forEach(function(element) {
 						// element[2] == group, only render the bill with the selected group
@@ -133,20 +131,20 @@ $("#sendTime").on("click", function() {
 							document.getElementById("row").appendChild(row);
 						}
 					});
-					
+
 					var sumRow = document.createElement('tr'); // set tfoot
-					
+
 					var sumMerge = document.createElement('td');
 					sumMerge.setAttribute("colspan", 3);
 					sumMerge.setAttribute("align", "right");
 					sumMerge.appendChild(document.createTextNode("小記："));
 					sumRow.appendChild(sumMerge);
-					
+
 					var sumS = document.createElement('td');
 					sumS.setAttribute("id", "sum");
 					sumS.appendChild(document.createTextNode(billSum));
 					sumRow.appendChild(sumS);
-					
+
 					document.getElementById("subTotal").appendChild(sumRow);
 				}
 			}
@@ -170,7 +168,7 @@ $("#ediAmount").on("change", function() {
 
 $("#deleteBill").on("click", function() {
 	$.ajax({
-		url: "/billDelete",
+		url: "/bill/delete",
 		type: "POST",
 		data: JSON.stringify({"id": trID}),
 		contentType: "application/json",
@@ -190,7 +188,7 @@ $("#deleteBill").on("click", function() {
 });
 
 var trID = null;
-$("tbody").on("click", "tr", function() { 
+$("tbody").on("click", "tr", function() {
 	// if another row is clicked
 	if (trID && this.id != trID) {
 		var newID = this.id;
@@ -220,7 +218,7 @@ function recordEdit(rowID) {
 	$("input[id^='edi'], select[id^='edi']").each(function() {
 		var key = $(this).attr('id');
 		var value = $(this).val();
-		
+
 		if (key == "ediDate" && value) {
 			editItem[key] = value.replace(/-/g,"");
 		}
@@ -242,7 +240,7 @@ function recordEdit(rowID) {
 		});
 
 		$.ajax({
-			url: "/billEdit",
+			url: "/bill/edit",
 			type: "POST",
 			data: JSON.stringify({"content":editItem}),
 			dataType: "json",

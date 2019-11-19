@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block title -%}
+    重置密碼
+{%- endblock %}
+
+{% block main %}
+    <style>
+        html, body {
+            background-color: #808080;
+        }
+    </style>
+    <div class="container con-form welcome-form">
+    {% if not session.reset %}
+        <h3 class="text-center">非常抱歉</h3>
+        <p>重置過程出現問題，請回到首頁再次嘗試進行重設密碼的需求，謝謝。</p>
+        <div class="row row-btn"><button class="btn btn-primary btn-lg btn-block" onclick="location.href='/'">回首頁</button></div>
+    {% else %}
+        {% if session.error %}
+            <div class="alert alert-warning" role="alert">
+                {{ session.error }}
+            </div>
+        {% endif %}
+        <h3 class="text-center">重置密碼</h3>
+        <p>請輸入新密碼與確認密碼 (長度限制8-24字、數字英文各1)</p>
+        <small class="text-primary" id="hintpassword"></small>
+        <form action="/pass/reset" method="post">
+            <div class="form-group">
+                <input class="form-control" type="password" autocomplete="off" name="password" id="password"
+                placeholder="新的密碼" minlength="8" maxlength="24" required>
+            </div>
+            <div class="form-group">
+                <input class="form-control" type="password" autocomplete="off" name="confirmation" id="confirmation"
+                placeholder="確認密碼" minlength="8" maxlength="24" required>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit">重置密碼</button>
+            </div>
+        </form>
+    {% endif %}
+    </div>
+
+    <script>
+        $("#password, #confirmation").on("change", function() {
+            var password = $("#password").val();
+            var confirmation = $("#confirmation").val();
+            if (!password || !confirmation) {
+                $("#hintpassword").html("請輸入密碼與確認密碼");
+                $("#submit").attr("disabled", true);
+            }
+            if (password == confirmation) {
+                $.ajax({
+                    url: "/check/pass",
+                    type: "POST",
+                    data: JSON.stringify({"pass1": password}),
+                    dataType: "json",
+                    contentType : "application/json",
+                    success: function(result) {
+                        if (result == "nameContFail") {
+                            $("#hintpassword").html("密碼內容不符合規範");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else if (result == "lenFail") {
+                            $("#hintpassword").html("密碼長度不符合規範");
+                            $("#submit").attr("disabled", true);
+                        }
+                        else {
+                            $("#hintpassword").html("");
+                            $("#submit").attr("disabled", false);
+                        }
+                    },
+                });
+            }
+            else {
+                $("#hintpassword").html("密碼與確認密碼的內容不同");
+                $("#submit").attr("disabled", true);
+            }
+        });
+    </script>
+{% endblock %}

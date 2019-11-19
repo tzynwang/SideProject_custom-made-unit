@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title -%}
+    忘記密碼
+{%- endblock %}
+
+{% block main %}
+    <style>
+        html, body {
+            background-color: #808080;
+        }
+    </style>
+    {% if error %}
+    <div class="container con-form">
+        <div class="alert alert-warning" role="alert">{{ error }}</div>
+    </div>
+    {% endif %}
+    <div class="container con-form welcome-form">
+        <h3 class="text-center">忘記密碼</h3>
+        <div class="row">
+            請在以下欄位輸入帳號或信箱，您會收到一封可以重新設定密碼的email：<br>
+            <small class="text-primary" id="hint"></small>
+        </div>
+        <form action="/pass/forget" method="post">
+            <div class="row">
+                <input autofocus autocomplete="off" class="form-control" name="input" id="input"
+                minlength="8" type="text" placeholder="帳號或信箱" required>
+            </div>
+            <div class="row row-btn">
+                <button class="btn btn-primary btn-lg btn-block" type="submit" id="formSubmit">送出</button>
+            </div>
+            <div style="text-align: center;">
+                <small>總之想起了密碼？<a href="/login">登入</a> || <a href="/">回首頁</a></small>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $("#formSubmit").on("click", function(event) {
+            event.preventDefault();
+            var input = $("#input").val();
+            $.ajax({
+                type: "GET",
+                url: "/check/mail",
+                data: {"email": input},
+                dataType: "json",
+                contentType : "application/json",
+                success: function(result) {
+                    if (result == "mailExist") {
+                        $("#hint").text("");
+                        $("form").submit();
+                    }
+                    if (result == "mailFail") {
+                        $.ajax({
+                            type: "GET",
+                            url: "/check/user",
+                            data: {"username": input},
+                            dataType: "json",
+                            contentType : "application/json",
+                            success: function(result) {
+                                if (result == "userExist") {
+                                    $("#hint").text("");
+                                    $("form").submit();
+                                }
+                                else {
+                                    $("#hint").text("此帳號還未註冊，無法重新設定密碼。");
+                                }
+                            }
+                        });
+                    }
+                    if (result == true) {
+                        $("#hint").text("此信箱還未註冊，無法重新設定密碼。");
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,54 +1,39 @@
+import os
+from datetime import datetime, timedelta
+
+import psycopg2
+
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
-from flask_session import Session
 from flask_mail import Mail, Message
-from datetime import date, datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
-from email_validator import EmailNotValidError, validate_email
-from helpers import CheckMail, CheckInput, CheckLen, LoginRequired, NewUser, ToStar
+from email_validator import validate_email
+from flask_session import Session
+from helpers import db_connection, new_user, verify_input, verify_len, verify_mail, to_star, login_required
 
-import json
-import psycopg2
 
 app = Flask(__name__)
 
-# Configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_PERMANENT"] = True
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_PERMANENT"] = os.environ.get("SESSION_PERMANENT")
+app.config["SESSION_PERMANENT_LIFETIME"] = os.environ.get("SESSION_PERMANENT_LIFETIME")
+app.config["SESSION_TYPE"] = os.environ.get("SESSION_TYPE")
 Session(app)
 
-app.config["MAIL_SERVER"] = "smtp.gmail.com"
-app.config["MAIL_PORT"] = 465
-app.config["MAIL_USE_SSL"] = True
-app.config["MAIL_DEFAULT_SENDER"] = ("custom-made-unit Official", "custom.made.unit@gmail.com")
-app.config["MAIL_MAX_EMAILS"] = 10
-app.config["MAIL_USERNAME"] = "custom.made.unit@gmail.com"
-app.config["MAIL_PASSWORD"] = "rinyukarine"
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+app.config["MAIL_PORT"] = os.environ.get("MAIL_PORT")
+app.config["MAIL_USE_SSL"] = os.environ.get("MAIL_USE_SSL")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
+app.config["MAIL_MAX_EMAILS"] = os.environ.get("MAIL_MAX_EMAILS")
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
 mail = Mail(app)
 
 app.jinja_env.line_comment_prefix = "##"
 
-# connection error handling
-try:
-    conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
-                            password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
-                            host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
-    connection = conn.cursor()
-except psycopg2.InterfaceError:
-    try:
-        connection.close()
-        connection = conn.cursor()
-    except:
-        conn.close()
-        conn = psycopg2.connect(database="d4si1co4s3p2gi", user="mjyufuhmpotxwl", 
-                                password="308d87d49fb8710befb9df22342570abaf26a0b16a3ab24fab0a87796f984943", 
-                                host="ec2-174-129-218-200.compute-1.amazonaws.com", port="5432")
-        connection = conn.cursor()
-
 
 @app.route("/welcome")
 def welcome():
+    """intro page, leads to register/login"""
     return render_template("welcome.html")
 
 
@@ -58,59 +43,62 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
-        maddress = request.form.get("email")
+        email = request.form.get("email")
 
-        if not username or not password or not confirmation or not maddress:
+        if not username or not password or not confirmation or not email:
             return render_template("register.html", error="註冊資訊有短缺，請填完全部欄位。")
-        elif CheckInput(username) is False or CheckLen(username, 8, 16) is False:
+        elif (verify_input(username) or verify_len(username, 8, 16)) is False:
             return render_template("register.html", error="帳號不符合規範：8-16個字元，至少包含1英文字母、1數字。")
-        elif NewUser(username) is False:
+        elif new_user(username) is False:
             return render_template("register.html", error="這個帳號已經被註冊過了，請換一個。")
-        elif CheckMail(maddress) == 0:
+        elif verify_mail(email) == "mail_invalid":
             return render_template("register.html", error="輸入的email無效：請檢查email拼字、或是換一個email。")
-        elif CheckMail(maddress) == -1:
+        elif verify_mail(email) == "mail_existed":
             return render_template("register.html", error="這個email已經被使用過了，請換一個email。")
-        elif CheckInput(password) is False or CheckLen(password, 8, 24) is False:
+        elif (verify_input(password) or verify_len(password, 8, 24)) is False:
             return render_template("register.html", error="密碼不符合規範：8-24個字元，至少包含1英文字母、1數字。")
         elif password != confirmation:
             return render_template("register.html", error="兩次輸入的密碼內容不同，請檢查。")
-        
+
+        conn = db_connection()
         hashpass = generate_password_hash(password)
-        connection.execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)", 
-                            (username, hashpass, maddress))
-        conn.commit()
-        
-        connection.execute("SELECT id,verified FROM users WHERE username = %s", (username,))
-        row = connection.fetchone()
+        conn[0].execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)",
+                           (username, hashpass, email))
+        conn[1].commit()
+
+        conn[0].execute("SELECT id,verified FROM users WHERE username = %s", (username,))
+        row = conn[0].fetchone()
         session["id"] = row[0]
         session["verified"] = row[1]
-        
+
         # insert target info (default all NULL) for this userid
-        connection.execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
-        conn.commit()
+        conn[0].execute("INSERT INTO targets (id,userid) VALUES (DEFAULT,%s)", (row[0],))
+        conn[1].commit()
 
         # send authenticate email
-        connection.execute("SELECT username,email FROM users WHERE id = %s", (row[0],))
-        row = connection.fetchone()
+        conn[0].execute("SELECT username,email FROM users WHERE id = %s", (row[0],))
+        row = conn[0].fetchone()
         username = row[0]
         email = row[1]
 
-        key = URLSafeTimedSerializer("user-authenticate-key")
+        key = URLSafeTimedSerializer(os.environ.get("SECRET_KEY"))
         token = key.dumps(email)
-        url = "http://127.0.0.1:5000/authenticate/" + token
+        url = os.environ.get("URL") + "/token/verify/" + token
 
         # token expired time
-        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
+        expired_time = str(datetime.now().replace(microsecond=0) + timedelta(minutes=30))
 
         # email contents:
         subject = "[你與○○的距離||custom-made-unit] 新帳號認證"
-        message = username + "你好，<br><br>請點選右側連結來啟動帳號：" + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
-                + expiredTime \
-                + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href='http://127.0.0.1:5000/gen_token'>點此</a>來取得新的認證email"
+        message = username + "你好，<br><br>請點選右側連結來啟動帳號："\
+                + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
+                + expired_time \
+                + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，"\
+                + "請<a href='" + os.environ.get("URL") + "/token/sent'>點此</a>來取得新的認證email"
         msg = Message(
-            subject = subject,
-            recipients = [email],
-            html = message
+            subject=subject,
+            recipients=[email],
+            html=message
         )
         mail.send(msg)
         return redirect(url_for("index"))
@@ -118,127 +106,124 @@ def register():
         return render_template("register.html", error=None)
 
 
-@app.route("/newUser")
-def newuser(): #for login
-    username = request.args.get("username")
-    if NewUser(username) is True:
+@app.route("/check/mail")
+def check_mail():
+    """for register/pass_forget.html"""
+    email = request.args.get("email")
+    if verify_mail(email) == "mail_new":
         return jsonify(True)
-    else:
-        return jsonify(False)
-
-
-@app.route("/mailValidate")
-def mailvalid(): #for register
-    maddress = request.args.get("maddress")
-    if CheckMail(maddress) == 1:
-        return jsonify(True)
-    elif CheckMail(maddress) == -1:
+    if verify_mail(email) == "mail_existed":
         return jsonify("mailExist")
     else:
         return jsonify("mailFail")
 
 
-@app.route("/checkUser")
-def checkuser(): #for register
+@app.route("/check/user")
+def check_user():
+    """for login/register/pass_forget.html"""
     username = request.args.get("username")
-    if NewUser(username) is False:
+    if new_user(username) is False:
         return jsonify("userExist")
-    if CheckInput(username) is False:
+    elif verify_input(username) is False:
         return jsonify("nameContFail")
-    if CheckLen(username, 8, 16) is False:
+    elif verify_len(username, 8, 16) is False:
         return jsonify("lenFail")
     else:
         return jsonify(True)
 
 
-@app.route("/checkPass", methods=["POST"])
-def checkpass(): #for register
+@app.route("/check/pass", methods=["POST"])
+def check_pass():
+    """for register/password/setting.html"""
     pass1 = request.get_json()["pass1"]
-    if CheckInput(pass1) is False:
+    if verify_input(pass1) is False:
         return jsonify("nameContFail")
-    if CheckLen(pass1, 8, 24) is False:
+    if verify_len(pass1, 8, 24) is False:
         return jsonify("lenFail")
-    else:
-        return jsonify(True)
+    return jsonify(True)
 
 
-@app.route("/gen_token")
-@LoginRequired
-def token():
+@app.route("/token/sent")
+@login_required
+def token_sent():
     now = datetime.now().replace(microsecond=0)
     last = session.get("last")
 
     if last is None or (now-last).total_seconds() > 300:
-        userID = session.get("id")
-        connection.execute("SELECT username,email FROM users WHERE id = %s", (userID,))
-        row = connection.fetchone()
+        userid = session.get("id")
+        conn = db_connection()
+        conn[0].execute("SELECT username,email FROM users WHERE id = %s", (userid,))
+        row = conn[0].fetchone()
 
-        key = URLSafeTimedSerializer("user-authenticate-key")
+        key = URLSafeTimedSerializer(os.environ.get("SECRET_KEY"))
         token = key.dumps(row[1])
-        url = "http://127.0.0.1:5000/authenticate/" + token
+        url = os.environ.get("URL") + "/token/verify/" + token
 
         # token expired time
-        expiredTime = str(datetime.now().replace(microsecond=0) + timedelta(minutes = 30))
+        expired_time = str(datetime.now().replace(microsecond=0) + timedelta(minutes=30))
 
         # email contents:
         subject = "[你與○○的距離||custom-made-unit] 新帳號認證"
-        message = row[0] + "你好，<br><br>請點選右側連結來啟動帳號：" + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
-            + expiredTime \
-            + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，請<a href='http://127.0.0.1:5000/gen_token'>點此</a>來取得新的認證email"
+        message = row[0] + "你好，<br><br>請點選右側連結來啟動帳號："\
+            + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
+            + expired_time \
+            + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，"\
+            + "請<a href='" + os.environ.get("URL") + "/token/sent'>點此</a>來取得新的認證email"
 
         msg = Message(
-            subject = subject,
-            recipients = [row[1]],
-            html = message
+            subject=subject,
+            recipients=[row[1]],
+            html=message
         )
         mail.send(msg)
-        session["last"] = now + timedelta(minutes = 5)
+        session["last"] = now + timedelta(minutes=5)
 
         email = validate_email(row[1])
-        starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
-        session["newtoken"] = "認證信已經發到"+starMail+"，請依照信中說明來啟動帳號，謝謝。"
-        return redirect(url_for("tokendone"))
+        email_star = str(to_star(str(email["local"])) + "@" + str(email["domain"]))
+        session["newtoken"] = "認證信已經發到<span class='text-primary'>"\
+                              +email_star+"</span>，請依照信中說明來啟動帳號，謝謝。"
+        return redirect(url_for("token_sent_done"))
     else:
-        return redirect(url_for("tokenfail", sec=abs(int((now-last).total_seconds()))))
+        return redirect(url_for("token_sent_fail", sec=abs(int((now-last).total_seconds()))))
 
 
-@app.route("/gen_token/done")
-def tokendone():
+@app.route("/token/sent/done")
+def token_sent_done():
     error = session.get("newtoken")
     return render_template("token_sent.html", error=error)
 
 
-@app.route("/gen_token/fail")
-def tokenfail():
+@app.route("/token/sent/fail")
+def token_sent_fail():
     sec = int(request.args.get("sec"))
-    m, s = divmod(sec, 60)
-    if m is 0:
-        waitingtime = str(s)+"秒"
+    minutes, seconds = divmod(sec, 60)
+    if minutes == 0:
+        wait_time = str(seconds)+"秒"
     else:
-        waitingtime = str(m)+"分"+str(s)+"秒"
-    return render_template("token_sent_fail.html", error=waitingtime)
+        wait_time = str(minutes)+"分"+str(seconds)+"秒"
+    return render_template("token_sent_fail.html", error=wait_time)
 
 
-@app.route("/authenticate/<token>")
-def checktoken(token):
-    key = URLSafeTimedSerializer("user-authenticate-key")
+@app.route("/token/verify/<token>")
+def token_verify(token):
+    key = URLSafeTimedSerializer(os.environ.get("SECRET_KEY"))
     try:
         plaintext = key.loads(token, max_age=1800)
     except SignatureExpired:
-        return render_template("token_fail.html", status="token過期")
+        return render_template("token_verify_fail.html", status="token過期")
     except BadSignature:
-        return render_template("token_fail.html", status="token無效")
-    
+        return render_template("token_verify_fail.html", status="token無效")
+
     # check if plaintext(email) exists in db
-    connection.execute("SELECT email from users where email = %s", (plaintext,))
-    row = connection.fetchone()
+    conn = db_connection()
+    conn[0].execute("SELECT email from users where email = %s", (plaintext,))
+    row = conn[0].fetchone()
     if row[0] is None:
-        return render_template("token_fail.html", status=None)
+        return render_template("token_verify_fail.html", status=None)
     else:
-        connection.execute("UPDATE users SET verified = true WHERE email = %s", (plaintext,))
-        conn.commit()
+        conn[0].execute("UPDATE users SET verified = true WHERE email = %s", (plaintext,))
+        conn[1].commit()
         session["verified"] = True
-        # 這邊須修正，理想流程：
         return redirect(url_for("index", verify="true"))
 
 
@@ -248,21 +233,22 @@ def login():
         session.clear()
         username = request.form.get("username")
         password = request.form.get("password")
-        
+
         if not username or not password:
             return render_template("login.html", error="登入資訊有短缺，請輸入帳號與密碼。")
-        elif NewUser(username) is True:
+        elif new_user(username) is True:
             return render_template("login.html", error="查無此帳號，請先註冊。")
-        
-        connection.execute("SELECT hash FROM users WHERE username = (%s)", (username,))
-        row = connection.fetchone()
-        dbPass = row[0]
-        
-        if check_password_hash(dbPass, password) is False:
+        else:
+            conn = db_connection()
+            conn[0].execute("SELECT hash FROM users WHERE username = %s", (username,))
+            row = conn[0].fetchone()
+            db_password = row[0]
+
+        if check_password_hash(db_password, password) is False:
             return render_template("login.html", error="密碼不正確")
         else:
-            connection.execute("SELECT id,verified from users WHERE username = %s", (username,))
-            row = connection.fetchone()
+            conn[0].execute("SELECT id,verified from users WHERE username = %s", (username,))
+            row = conn[0].fetchone()
             # pack user information into session
             session["id"] = row[0]
             session["verified"] = row[1]
@@ -271,66 +257,69 @@ def login():
         return render_template("login.html", error=None)
 
 
-@app.route("/forget", methods=["GET", "POST"])
-def forget():
+@app.route("/pass/forget", methods=["GET", "POST"])
+def pass_forget():
     if request.method == "POST":
         user = request.form.get("input")
         if not user:
-            return render_template("forget.html", error="請輸入帳號或信箱。")
-        elif CheckMail(user) is 0:
-            if NewUser(user) is True:
-                return render_template("forget.html", error="此帳號還未註冊，無法重新設定密碼。")
+            return render_template("pass_forget.html", error="請輸入帳號或信箱。")
+        elif verify_mail(user) == "mail_invalid":
+            if new_user(user) is True:
+                return render_template("pass_forget.html", error="此帳號還未註冊，無法重新設定密碼。")
             else:
-                connection.execute("SELECT username,email FROM users WHERE username = %s", (user,))
-                row = connection.fetchone()
-        elif CheckMail(user) is 1:
-                return render_template("forget.html", error="此信箱還未註冊，無法重新設定密碼。")
-        elif CheckMail(user) is -1:
-            connection.execute("SELECT username,email FROM users WHERE email = %s", (user,))
-            row = connection.fetchone()
+                conn = db_connection()
+                conn[0].execute("SELECT username,email FROM users WHERE username = %s", (user,))
+                row = conn[0].fetchone()
+        elif verify_mail(user) == "mail_new":
+            return render_template("pass_forget.html", error="此信箱還未註冊，無法重新設定密碼。")
+        elif verify_mail(user) == "mail_existed":
+            conn = db_connection()
+            conn[0].execute("SELECT username,email FROM users WHERE email = %s", (user,))
+            row = conn[0].fetchone()
 
-        key = URLSafeSerializer("user-authenticate-key")
+        key = URLSafeSerializer(os.environ.get("SECRET_KEY"))
         token = key.dumps(row[0])
-        url = "http://127.0.0.1:5000/reset/" + token
+        url = os.environ.get("URL") + "/pass/reset/" + token
 
         subject = "[你與○○的距離||custom-made-unit] 密碼重置"
         message = row[0] + "你好，<br><br>請點選右側連結來重新設定密碼：" + url + "<br>謝謝(´・ω・`)<br><br>"\
             + "如果沒有重設密碼的需求，請忽略這封信，謝謝。"
-        
+
         msg = Message(
-            subject = subject,
-            recipients = [row[1]],
-            html = message
+            subject=subject,
+            recipients=[row[1]],
+            html=message
         )
         mail.send(msg)
 
         email = validate_email(row[1])
-        starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
-        session["newpassword"] = "重置密碼的信已經發到"+starMail+"，請依照信中說明來重新設定密碼，謝謝。"
-        return redirect(url_for("forget_done"))
+        email_star = str(to_star(str(email["local"])) + "@" + str(email["domain"]))
+        session["newpassword"] = "重置密碼的信已經發到<span class='text-primary'>"\
+                                 +email_star+"</span>，請依照信中說明來重新設定密碼，謝謝。"
+        return redirect(url_for("pass_forget_sent"))
     else:
-        return render_template("forget.html", error=None)
+        return render_template("pass_forget.html", error=None)
 
 
-@app.route("/forget/sent")
-def forget_done():
+@app.route("/pass/forget/sent")
+def pass_forget_sent():
     error = session.get("newpassword")
-    return render_template("forget_done.html", error=error)
+    return render_template("pass_forget_sent.html", error=error)
 
 
-@app.route("/reset/<token>")
-def reset(token):
-    key = URLSafeSerializer("user-authenticate-key")
+@app.route("/pass/reset/<token>")
+def pass_reset_verify(token):
+    key = URLSafeSerializer(os.environ.get("SECRET_KEY"))
     try:
         plaintext = key.loads(token)
         session["reset"] = plaintext
-        return redirect(url_for("password"))
+        return redirect(url_for("pass_reset"))
     except BadSignature:
-        return redirect(url_for("password"))
+        return redirect(url_for("pass_reset"))
 
 
-@app.route("/reset", methods=["GET", "POST"])
-def password():
+@app.route("/pass/reset", methods=["GET", "POST"])
+def pass_reset():
     if request.method == "POST":
         username = session.get("reset")
         password = request.form.get("password")
@@ -338,281 +327,341 @@ def password():
 
         if not username:
             session.clear()
-            return render_template("password.html")
+            return render_template("pass_reset.html")
         elif not password or not confirmation:
             session["error"] = "請輸入密碼與確認密碼"
-            return render_template("password.html")
-        elif CheckInput(password) is False or CheckLen(password, 8, 24) is False:
+            return render_template("pass_reset.html")
+        elif verify_input(password) is False or verify_len(password, 8, 24) is False:
             session["error"] = "密碼不符合規範：8-24個字元，至少包含1英文字母、1數字。"
-            return render_template("password.html")
+            return render_template("pass_reset.html")
         elif password != confirmation:
             session["error"] = "兩次輸入的密碼內容不同，請檢查。"
-            return render_template("password.html")
+            return render_template("pass_reset.html")
         else:
             hashpass = generate_password_hash(password)
-            connection.execute("UPDATE users SET hash = %s WHERE username = %s", (hashpass,username))
-            conn.commit()
+            conn = db_connection()
+            conn[0].execute("UPDATE users SET hash = %s WHERE username = %s",
+                               (hashpass, username))
+            conn[1].commit()
             session.clear()
-            return render_template("password_done.html")
+            return render_template("pass_reset_done.html")
     else:
-        return render_template("password.html") # redirect from reset() BadSignature
-    
+        # redirect from pass_reset_verify() BadSignature
+        return render_template("pass_reset.html")
+
 
 @app.route("/")
-@LoginRequired
+@login_required
 def index():
-    userID = session.get("id")
+    userid = session.get("id")
     verified = session.get("verified")
+    conn = db_connection()
 
     if not verified:
-        connection.execute("SELECT username,email FROM users WHERE id = %s", (userID,))
-        row = connection.fetchone()
+        conn[0].execute("SELECT username,email FROM users WHERE id = %s", (userid,))
+        row = conn[0].fetchone()
         email = validate_email(row[1])
-        starMail = str(ToStar(str(email["local"])) + "@" + str(email["domain"]))
-        return render_template("index.html", username=row[0], email=starMail)
+        email_star = str(to_star(str(email["local"])) + "@" + str(email["domain"]))
+        return render_template("index.html", username=row[0], email=email_star)
     else:
         # get this month's bill(s) SUM
-        NOW = datetime.now()
-        dateStart = int(str(NOW.year)+str(NOW.month)+str(0)+str(0))
-        dateEnd = int(str(NOW.year)+str(NOW.month)+str(32))
-        connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", \
-                            (userID,dateStart,dateEnd))
-        row = connection.fetchone()
-        
+        today = datetime.now()
+        date_start = int(str(today.year)+str(today.month)+str(0)+str(0))
+        date_end = int(str(today.year)+str(today.month)+str(32))
+        conn[0].execute("SELECT SUM(amount) FROM bills WHERE userid = %s \
+                           AND datestamp BETWEEN %s AND %s", (userid, date_start, date_end))
+        row = conn[0].fetchone()
+
         # in case of no bill
         if row[0] is None:
             amount = 0
         else:
             amount = row[0]
-        
+
         # get target-setting status
-        connection.execute("SELECT targetunit,target,targetamount from targets where userid = %s", (userID,))
-        row = connection.fetchone()
-        
+        conn[0].execute("SELECT targetunit,target,targetamount from targets where userid = %s",
+                           (userid,))
+        row = conn[0].fetchone()
+
         # no targetamount info
-        if row[2] is None:
-            session["targetamount"] = None
+        if (row[0] and row[1] and row[2]) is None:
+            session["targets"] = None
             return render_template("index.html")
         else:
-            session["targetamount"] = True
-            targets = [row[i] for i in range(0,2) if row[i] is not None] # only display not null target(s)
-            percentage = round(float(amount)/float(row[2]),2)
-            return render_template("index.html", amount=amount, targets=targets, percentage=percentage)
+            session["targets"] = True
+            # only display not null target(s)
+            targets = [row[i] for i in range(0, 2) if row[i] is not None]
+            percentage = round(float(amount)/float(row[2]), 2)
+            return render_template("index.html",
+                                   amount=amount, targets=targets, percentage=percentage)
 
 
-@app.route("/queryMonthSum", methods=["POST"])
-@LoginRequired
-def monthsum(): # for index.html
-    userID = session.get("id")
-    dateStart = int("".join(request.get_json()["date"].split("-"))+str(0)+str(0))
-    dateEnd = int("".join(request.get_json()["date"].split("-"))+str(32))
-    connection.execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND datestamp BETWEEN %s AND %s", \
-                        (userID,dateStart,dateEnd))
-    row = connection.fetchone()
-    
+@app.route("/bill/query/month", methods=["POST"])
+@login_required
+def bill_query_month():
+    """for index.html"""
+    userid = session.get("id")
+    conn = db_connection()
+    date_start = int("".join(request.get_json()["date"].split("-"))+str(0)+str(0))
+    date_end = int("".join(request.get_json()["date"].split("-"))+str(32))
+    conn[0].execute("SELECT SUM(amount) FROM bills WHERE userid = %s AND \
+                       datestamp BETWEEN %s AND %s", (userid, date_start, date_end))
+    row = conn[0].fetchone()
+
     if row[0] is None: # no bill record
         result = {"amount": 0, "percentage": 0}
         return jsonify(result)
     else:
-        connection.execute("SELECT targetamount FROM targets WHERE userid = %s", (userID,))
-        target = connection.fetchone()
+        conn[0].execute("SELECT targetamount FROM targets WHERE userid = %s", (userid,))
+        target = conn[0].fetchone()
         result = {"amount": row[0], "percentage": (row[0]/target[0])}
         return jsonify(result)
 
 
-@app.route("/add", methods=["GET", "POST"])
-@LoginRequired
-def add():
-    userID = session.get("id")
-    connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
+@app.route("/bill/add", methods=["GET", "POST"])
+@login_required
+def bill_add():
+    userid = session.get("id")
+    conn = db_connection()
+    conn[0].execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userid,))
+    row = conn[0].fetchone()
+    group_name = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
 
     if request.method == "POST":
-        groupKey = request.form.get("group")
+        group_key = request.form.get("group")
         amount = request.form.get("amount")
-        notes = request.form.get("notes")        
-        dateStamp = request.form.get("dateStamp")
+        notes = request.form.get("notes")
+        date_stamp = request.form.get("dateStamp")
 
         # error handle
-        if not groupKey or not amount or not dateStamp:
-            return render_template("add.html", groupName=groupName, error="記帳資料有缺，是否有漏填欄位？")
+        if not group_key or not amount or not date_stamp:
+            return render_template("bill_add.html", group_name=group_name, error="記帳資料有缺，是否有漏填欄位？")
+
         try:
             # YYYY-MM-DD ==> YYYYMMDD
-            dateStamp = int("".join((request.form.get("dateStamp")).split("-")))
+            datestamp = int("".join(date_stamp.split("-")))
         except AttributeError:
-            return render_template("add.html", groupName=groupName, error="日期格式有誤，請透過網頁日曆選取日期")
+            return render_template("bill_add.html", group_name=group_name,
+                                   error="日期格式有誤，請透過網頁日曆選取日期")
         try:
-            amountInt = int(amount)
+            amount_int = int(amount)
         except ValueError:
-            return render_template("add.html", groupName=groupName, error="記帳金額格式有誤，只能輸入正整數")
-        if amountInt < 1 or amountInt > 2147483647:
-            return render_template("add.html", groupName=groupName, error="記帳金額有誤，最低記帳金額為1元")
+            return render_template("bill_add.html", group_name=group_name, error="記帳金額格式有誤，只能輸入正整數")
+        if amount_int < 1 or amount_int > 2147483647:
+            return render_template("bill_add.html", group_name=group_name, error="記帳金額有誤，最低記帳金額為1元")
 
         # input OK, insert into db
-        connection.execute("INSERT INTO bills (id,userid,groupkey,amount,notes,datestamp) \
-                            VALUES (DEFAULT,%s,%s,%s,%s,%s)",
-                            (userID,groupKey,amountInt,notes,dateStamp))
-        conn.commit()
+        conn[0].execute("INSERT INTO bills (id,userid,groupkey,amount,notes,datestamp) \
+                           VALUES (DEFAULT,%s,%s,%s,%s,%s)",
+                           (userid, group_key, amount_int, notes, datestamp))
+        conn[1].commit()
         return redirect(url_for("index"))
     else:
-        return render_template("add.html", groupName=groupName, error=None)
+        return render_template("bill_add.html", group_name=group_name, error=None)
 
 
-@app.route("/view")
-@LoginRequired
-def view():
-    userID = session.get("id")
-    connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    groupName = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]} # for bill edit usage
-    return render_template("view.html", groupName=groupName.items())
-    
-    
-@app.route("/filter", methods=["POST"])
-@LoginRequired
-def filter(): # for view.html
-    userID = session.get("id")
-    start =  int("".join((request.get_json()["start"]).split("-")))
+@app.route("/bill/view")
+@login_required
+def bill_view():
+    userid = session.get("id")
+    conn = db_connection()
+    conn[0].execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userid,))
+    row = conn[0].fetchone()
+    group_name = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]} # for bill edit usage
+    return render_template("bill_view.html", group_name=group_name)
+
+
+@app.route("/bill/filter", methods=["POST"])
+@login_required
+def bill_filter():
+    userid = session.get("id")
+    conn = db_connection()
+    start = int("".join((request.get_json()["start"]).split("-")))
     end = int("".join((request.get_json()["end"]).split("-")))
 
-    connection.execute("SELECT id,datestamp,groupkey,notes,amount FROM bills \
-                        WHERE (datestamp BETWEEN %s AND %s) AND userid = %s ORDER BY datestamp", (start,end,userID))
-    rows = connection.fetchall()
+    conn[0].execute("SELECT id,datestamp,groupkey,notes,amount FROM bills \
+                       WHERE (datestamp BETWEEN %s AND %s) AND userid = %s \
+                       ORDER BY datestamp", (start, end, userid))
+    rows = conn[0].fetchall()
 
-    connection.execute("SELECT g0,g1,g2,g3 FROM users WHERE id = %s",(userID,))
-    groupRow = connection.fetchone()
-    groupName = {"g0":groupRow[0], "g1":groupRow[1], "g2":groupRow[2], "g3":groupRow[3]}
+    conn[0].execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userid,))
+    row = conn[0].fetchone()
+    group_name = {"g0":row[0], "g1":row[1], "g2":row[2], "g3":row[3]}
 
     if not rows:
         return jsonify(False)
     else:
         bills = []
         for items in rows:
-            tr = []
+            table_row = []
             for i in items:
-                if i in groupName:
-                    tr.append(groupName[i]) # append group name according to groupKey
+                if i in group_name:
+                    # append group name according to group key
+                    table_row.append(group_name[i])
                 else:
-                    tr.append(i)
-            bills.append(tr)
+                    table_row.append(i)
+            bills.append(table_row)
         return jsonify(bills)
 
 
-@app.route("/billEdit", methods=["POST"])
-@LoginRequired
-def edit():
-    toUpdate = request.get_json()["content"]
-    ID = toUpdate["id"]
-    
-    for k,v in toUpdate.items():
-        if k == "ediDate":
-            newDate = int(v)
-            connection.execute("UPDATE bills SET datestamp = %s WHERE id = %s",(newDate,ID))
-            conn.commit()
-        if k == "ediGroup":
-            connection.execute("UPDATE bills SET groupkey = %s WHERE id = %s",(v,ID))
-            conn.commit()
-        if k == "ediNote":
-            connection.execute("UPDATE bills SET notes = %s WHERE id = %s",(v,ID))
-            conn.commit()
-        if k == "ediAmount":
-            connection.execute("UPDATE bills SET amount = %s WHERE id = %s",(v,ID))
-            conn.commit()
+@app.route("/bill/edit", methods=["POST"])
+@login_required
+def bill_edit():
+    bill_update = request.get_json()["content"]
+    userid = bill_update["id"]
+    conn = db_connection()
+
+    for key, value in bill_update.items():
+        if key == "ediDate":
+            new_date = int(value)
+            conn[0].execute("UPDATE bills SET datestamp = %s WHERE id = %s", (new_date, userid))
+            conn[1].commit()
+        if key == "ediGroup":
+            conn[0].execute("UPDATE bills SET groupkey = %s WHERE id = %s", (value, userid))
+            conn[1].commit()
+        if key == "ediNote":
+            conn[0].execute("UPDATE bills SET notes = %s WHERE id = %s", (value, userid))
+            conn[1].commit()
+        if key == "ediAmount":
+            conn[0].execute("UPDATE bills SET amount = %s WHERE id = %s", (value, userid))
+            conn[1].commit()
     return jsonify(True)
 
 
-@app.route("/billDelete", methods=["POST"])
-@LoginRequired
-def delete():
-    toDelete = request.get_json()["id"]
-    connection.execute("DELETE from bills WHERE id = %s", (toDelete,))
-    conn.commit()
+@app.route("/bill/delete", methods=["POST"])
+@login_required
+def bill_delete():
+    bill_to_delete = request.get_json()["id"]
+    conn = db_connection()
+    conn[0].execute("DELETE from bills WHERE id = %s", (bill_to_delete,))
+    conn[1].commit()
     return jsonify(True)
 
 
-@app.route("/setting") # nav-bar right-side
-@LoginRequired
+@app.route("/setting")
+@login_required
 def setting():
-    userID = session.get("id")
-
-    #pull target status from db
-    connection.execute("SELECT target,targetamount,targetunit from targets where userid = %s", (userID,))
-    row = connection.fetchone()
-
+    userid = session.get("id")
+    conn = db_connection()
+    # pull target status from db
+    conn[0].execute("SELECT target,targetamount,targetunit from targets \
+                       WHERE userid = %s", (userid,))
+    row = conn[0].fetchone()
     target = row[0]
-    targetAmount = row[1]
-    targetUnit = row[2]
-    
-    #pull group names from db
-    connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-    row = connection.fetchone()
-    groupName = [row[0], row[1], row[2], row[3]]
+    target_amount = row[1]
+    target_unit = row[2]
 
-    return render_template("setting.html", groupName=groupName, target=target, targetAmount=targetAmount, targetUnit=targetUnit)
+    # pull group names from db
+    conn[0].execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userid,))
+    row = conn[0].fetchone()
+    group_name = [row[0], row[1], row[2], row[3]]
+
+    return render_template("setting.html", group_name=group_name,
+                           target=target, target_amount=target_amount, target_unit=target_unit)
 
 
-@app.route("/updateTarget", methods=["POST"])
-@LoginRequired
-def updatetargets():
-    userID = session.get("id")
-    t = request.get_json()
-    updatedT = {}
+@app.route("/setting/target", methods=["POST"])
+@login_required
+def setting_target():
+    userid = session.get("id")
+    targets = request.get_json()
+    conn = db_connection()
+    updated_targets = {}
 
-    for k,v in t.items():
-        if k == "targetAmount" and v:
+    for key, value in targets.items():
+        if key == "targetAmount" and value:
             try:
-                int(v)
+                int(value)
             except ValueError:
                 return jsonify(False)
-            if int(v) > 1 and int(v) < 2147483647:
-                connection.execute("UPDATE targets SET targetamount = %s WHERE userid = %s", (v,userID))
-                conn.commit()
-                updatedT.update({k: v})
-        if k == "target" and v and len(v) < 25:
-            connection.execute("UPDATE targets SET target = %s WHERE userid = %s", (v,userID))
-            conn.commit()
-            updatedT.update({k: v})
-        if k == "targetUnit" and v and len(v) < 9:
-            connection.execute("UPDATE targets SET targetunit = %s WHERE userid = %s", (v,userID))
-            conn.commit()
-            updatedT.update({k: v})
+            if int(value) > 1 and int(value) < 2147483647:
+                conn[0].execute("UPDATE targets SET targetamount = %s WHERE userid = %s",
+                                   (value, userid))
+                conn[1].commit()
+                updated_targets.update({key: value})
+        if key == "target" and value and len(value) < 25:
+            conn[0].execute("UPDATE targets SET target = %s WHERE userid = %s", (value, userid))
+            conn[1].commit()
+            updated_targets.update({key: value})
+        if key == "targetUnit" and value and len(value) < 9:
+            conn[0].execute("UPDATE targets SET targetunit = %s WHERE userid = %s",
+                               (value, userid))
+            conn[1].commit()
+            updated_targets.update({key: value})
 
-    return jsonify(updatedT)
+    return jsonify(updated_targets)
 
 
-@app.route("/updateGroupName", methods=["POST"])
-@LoginRequired
-def updategroup():
-    userID = session.get("id")
-    gNames = request.get_json()["gNames"]
-    updateName = request.get_json()["updateName"]
+@app.route("/setting/group", methods=["POST"])
+@login_required
+def setting_group():
+    userid = session.get("id")
+    group_key = request.get_json()["groupKey"]
+    new_group_name = request.get_json()["updateName"]
+    conn = db_connection()
 
-    if not gNames or not updateName or len(str(updateName)) > 24:
+    if not group_key or not new_group_name or len(str(new_group_name)) > 24:
         return jsonify(False)
     else:
-        connection.execute(f"UPDATE users SET {gNames} = %s WHERE id = %s", (updateName,userID))
-        conn.commit()
+        conn[0].execute(f"UPDATE users SET {group_key} = %s WHERE id = %s",
+                           (new_group_name, userid))
+        conn[1].commit()
         # get updated group name(s)
-        connection.execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userID,))
-        groupName = connection.fetchone()
-        return jsonify(groupName)
+        conn[0].execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userid,))
+        group_name = conn[0].fetchone()
+        return jsonify(group_name)
 
 
-@app.route("/updatePass", methods=["POST"])
-@LoginRequired
-def updatepass():
-    userID = session.get("id")
-    newPass = request.get_json()["pass1"]
-    newHash = generate_password_hash(newPass)
-    
-    connection.execute("UPDATE users SET hash = %s WHERE id = %s",(newHash, userID))
-    conn.commit()
+@app.route("/setting/account", methods=["GET", "POST"])
+@login_required
+def setting_account():
+    if request.method == "POST":
+        password = request.form.get("password")
+        if not password:
+            return render_template("setting_account.html", error="請輸入密碼")
+
+        userid = session.get("id")
+        conn = db_connection()
+        conn[0].execute("SELECT hash FROM users WHERE id = %s", (userid,))
+        row = conn[0].fetchone()
+        db_password = row[0]
+
+        if check_password_hash(db_password, password) is False:
+            return render_template("setting_account.html", error="密碼不正確")
+        else:
+            conn[0].execute("SELECT email FROM users WHERE id = %s", (userid,))
+            row = conn[0].fetchone()
+            email = row[0]
+            return render_template("setting_account.html", email=email, verification=True)
+    else:
+        return render_template("setting_account.html", verification=None, error=None)
+
+
+@app.route("/setting/account/pass", methods=["POST"])
+@login_required
+def setting_pass():
+    userid = session.get("id")
+    new_pass = request.get_json()["pass1"]
+    new_hash = generate_password_hash(new_pass)
+    conn = db_connection()
+    conn[0].execute("UPDATE users SET hash = %s WHERE id = %s", (new_hash, userid))
+    conn[1].commit()
+    return jsonify(True)
+
+
+@app.route("/setting/account/email", methods=["POST"])
+@login_required
+def setting_email():
+    userid = session.get("id")
+    new_email = request.get_json()["email"]
+    conn = db_connection()
+    conn[0].execute("UPDATE users SET email = %s WHERE id = %s", (new_email, userid))
+    conn[1].commit()
     return jsonify(True)
 
 
 @app.route("/logout")
-@LoginRequired
+@login_required
 def logout():
     session.clear()
     return redirect("/")

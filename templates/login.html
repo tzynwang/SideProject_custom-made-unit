@@ -5,56 +5,63 @@
 {%- endblock %}
 
 {% block main %}
+    <style>
+        html, body {
+            background-color: #808080;
+        }
+    </style>
     {% if error %}
     <div class="container con-form">
         <div class="alert alert-warning" role="alert">{{ error }}</div>
     </div>
     {% endif %}
-    <div class="container con-form">
+    <div class="container con-form welcome-form">
+        <h3 class="text-center">登入</h3>
         <form action="/login" method="post">
             <div class="row">
-                帳號：<span id="hint">查無帳號"<span id="id"></span>"，<a href="/register">去註冊？</a></span>
+                帳號：<span id="hint">查無帳號<span class="text-primary" id="id"></span>，<a href="/register">去註冊？</a></span>
             </div>
-            <div class="row">
-                <input autofocus autocomplete="off" class="form-control" name="username" id="username" 
-                minlength="8" maxlength="16" type="text" placeholder="輸入帳號" required>
+            <div class="row" style="margin-bottom: 1.5em;">
+                <input autofocus autocomplete="off" class="form-control" name="username" id="username"
+                minlength="8" maxlength="16" type="text" required>
             </div>
             <div class="row">密碼：</div>
-            <div class="row">
+            <div class="row" style="margin-bottom: 1.5em;">
                 <input autocomplete="off" class="form-control" name="password" id="password"
-                minlength="8" maxlength="24" type="password" placeholder="輸入密碼" required>
+                minlength="8" maxlength="24" type="password" required>
+                <small class="form-text text-muted">您的登入狀態會保留14天，或直到您登出。</small>
             </div>
-            
+
             <div class="row row-btn">
-                <button class="btn btn-primary" type="submit" id="submit">登入</button>
+                <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit">登入</button>
             </div>
-            
-            <div class="row">
-                <small><a href="/forget">忘記密碼</a> || 還沒有帳號？<a href="/register">去註冊</a> || <a href="/">回首頁</a></small>
+
+            <div style="text-align: center;">
+                <small><a href="/pass/forget">忘記密碼</a> || 還沒有帳號？<a href="/register">去註冊</a> || <a href="/">回首頁</a></small>
             </div>
         </form>
     </div>
-    
+
     <script>
         $($("#hint").hide());
 
         $("#username").on("change", function() {
             var username = $('#username').val();
             $.ajax({
-                url: "/newUser",
+                url: "/check/user",
                 type: "GET",
                 data: {"username": username},
                 dataType: "json",
                 contentType : "application/json",
                 success: function(result){
-                    if (result == true) {
+                    if (result == "userExist") {
+                        $("#hint").hide();
+                        $("#submit").attr("disabled", false);
+                    }
+                    else {
                         $("#hint").show();
                         $("#id").html(username);
                         $("#submit").attr("disabled", true);
-                    }
-                    else {
-                        $("#hint").hide();
-                        $("#submit").attr("disabled", false);
                     }
                 },
             });
