@@ -85,14 +85,15 @@ def register():
         key = URLSafeTimedSerializer(os.environ.get("SECRET_KEY"))
         token = key.dumps(email)
         url = os.environ.get("URL") + "/token/verify/" + token
+        link = "<a href=" + url + ">點我啟動帳號</a>"
 
         # token expired time
         expired_time = str(datetime.now().replace(microsecond=0) + timedelta(minutes=30))
 
         # email contents:
         subject = "[你與○○的距離||custom-made-unit] 新帳號認證"
-        message = username + "你好，<br><br>請點選右側連結來啟動帳號："\
-                + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
+        message = username + "您好，<br><br>請點選右側連結來啟動帳號："\
+                + link + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
                 + expired_time \
                 + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，"\
                 + "請<a href='" + os.environ.get("URL") + "/token/sent'>點此</a>來取得新的認證email"
@@ -159,14 +160,15 @@ def token_sent():
         key = URLSafeTimedSerializer(os.environ.get("SECRET_KEY"))
         token = key.dumps(row[1])
         url = os.environ.get("URL") + "/token/verify/" + token
+        link = "<a href=" + url + ">點我啟動帳號</a>"
 
         # token expired time
         expired_time = str(datetime.now().replace(microsecond=0) + timedelta(minutes=30))
 
         # email contents:
         subject = "[你與○○的距離||custom-made-unit] 新帳號認證"
-        message = row[0] + "你好，<br><br>請點選右側連結來啟動帳號："\
-            + url + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
+        message = row[0] + "您好，<br><br>請點選右側連結來啟動帳號："\
+            + link + "<br>謝謝(`・ω・´)<br><br>提示：這個連結會在"\
             + expired_time \
             + "後過期<br>如果這封信被打開時，連結已經超過賞味期限，"\
             + "請<a href='" + os.environ.get("URL") + "/token/sent'>點此</a>來取得新的認證email"
@@ -281,9 +283,10 @@ def pass_forget():
         key = URLSafeSerializer(os.environ.get("SECRET_KEY"))
         token = key.dumps(row[0])
         url = os.environ.get("URL") + "/pass/reset/" + token
+        link = "<a href=" + url + ">點我重置密碼</a>"
 
         subject = "[你與○○的距離||custom-made-unit] 密碼重置"
-        message = row[0] + "你好，<br><br>請點選右側連結來重新設定密碼：" + url + "<br>謝謝(´・ω・`)<br><br>"\
+        message = row[0] + "你好，<br><br>請點選右側連結來重新設定密碼：" + link + "<br>謝謝(´・ω・`)<br><br>"\
             + "如果沒有重設密碼的需求，請忽略這封信，謝謝。"
 
         msg = Message(
