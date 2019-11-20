@@ -14,7 +14,7 @@
     <div class="" role="alert" id="hintBox"><span id="hintText"></span></div>
     <div class="row">
         ## date selector part
-        <div class="col-lg-6 col-sm-12" id="search" style="max-width: 50%;">
+        <div class="col-lg-6 col-sm-6" id="search">
             <div class="row">
                 <div class="pretty p-default p-round">
                     <input class="form-control" type="radio" name="dateSelect" value="thisday">
@@ -33,9 +33,13 @@
                     <div class="state p-primary-o"><label>自選區間</label></div>
                 </div>
             </div>
-            <div class="row" id="dateselector" style="display: block; max-width: 50%;">
-                <div class="row"><input class="form-control" type="date" name="start" id="start" style="margin-left: 15px;"></div>
-                <div class="row"><input class="form-control" type="date" name="end" id="end" style="margin-left: 15px;"></div>
+            <div class="row" id="dateselector" style="display: block;">
+                <div class="row">
+                    <input class="form-control col-lg-6 col-sm-6" type="date" name="start" id="start" style="margin-left: 15px;">
+                </div>
+                <div class="row">
+                    <input class="form-control col-lg-6 col-sm-6" type="date" name="end" id="end" style="margin-left: 15px;">
+                </div>
             </div>
             <div class="row">
                 {% for key, value in group_name.items() %}
@@ -47,13 +51,13 @@
                 </div>
                 {% endfor %}
             </div>
-            <div class="row row-btn">
-                <button class="btn btn-primary" type="button" id="sendTime">篩選</button>
+            <div class="row row-btn col-lg-8 col-sm-6">
+                <button class="btn btn-primary btn-block" type="button" id="sendTime">篩選</button>
             </div>
         </div>
 
         ## edit part
-        <div class="col-lg-6 col-sm-12" id="editForm" style="max-width: 50%;">
+        <div class="col-lg-6 col-sm-6" id="editForm">
             <div class="row"><input class="form-control" type="date" id="ediDate"></div>
             <div class="row">
                 <select class="form-control" id="ediGroup">
