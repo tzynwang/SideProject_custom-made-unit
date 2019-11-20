@@ -195,19 +195,14 @@ $("tbody").on("click", "tr", function() {
 		$("#"+trID).css("background-color", "transparent");
 		$("#"+newID).css("background-color", "#e2e6ea");
 		$("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
-		$("#toUpdate").click(newID, function(){
-			recordEdit(newID);
-		});
 		trID = newID;
 	}
-
-	trID = this.id;
-	$("#"+this.id).css("background-color", "#e2e6ea");
-	$("#editForm").show("slow");
-	$("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
-	$("#toUpdate").click(trID, function(){
-		recordEdit(trID);
-	});
+	else {
+		trID = this.id;
+		$("#"+this.id).css("background-color", "#e2e6ea");
+		$("#editForm").show("slow");
+		$("#ediDate, #ediGroup, #ediNote, #ediAmount").val("");
+	}
 });
 
 function recordEdit(rowID) {
@@ -226,6 +221,7 @@ function recordEdit(rowID) {
 			editItem[key] = value;
 		}
 	});
+	console.log(editItem); //testcode
 
 	if ($.isEmptyObject(editItem)) {
 		$("#hintText").html("請填入至少一個修改內容，或按下「算了」取消修改");
