@@ -7,4 +7,3 @@ requests
 werkzeug
 psycopg2
 Gunicorn
-redis
