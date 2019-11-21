@@ -15,9 +15,9 @@ from helpers import db_connection, new_user, verify_input, verify_len, verify_ma
 app = Flask(__name__)
 
 app.secret_key = os.environ.get("SECRET_KEY")
-app.config["SESSION_PERMANENT"] = os.environ.get("SESSION_PERMANENT")
-app.config["SESSION_PERMANENT_LIFETIME"] = os.environ.get("SESSION_PERMANENT_LIFETIME")
-app.config["SESSION_TYPE"] = os.environ.get("SESSION_TYPE")
+app.config["SESSION_PERMANENT"] = True
+app.config["SESSION_PERMANENT_LIFETIME"] = timedelta(days=14)
+app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
