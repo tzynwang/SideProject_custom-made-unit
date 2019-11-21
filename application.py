@@ -14,7 +14,7 @@ from helpers import db_connection, new_user, verify_input, verify_len, verify_ma
 
 app = Flask(__name__)
 
-app.secret_key = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_PERMANENT_LIFETIME"] = timedelta(days=14)
 app.config["SESSION_TYPE"] = "filesystem"
