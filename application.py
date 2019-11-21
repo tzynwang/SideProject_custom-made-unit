@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
 from email_validator import validate_email
 from flask_session import Session
+from redis import Redis
 from helpers import db_connection, new_user, verify_input, verify_len, verify_mail, to_star, login_required
 
 
@@ -17,7 +18,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_PERMANENT_LIFETIME"] = timedelta(days=14)
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_TYPE"] = "redis"
+app.config["SESSION_REDIS"] = Redis(
+    host = os.environ.get("SESSION_REDIS_HOST"),
+    port = os.environ.get("SESSION_REDIS_PORT"),
+    password= os.environ.get("SESSION_REDIS_PASSWORD")
+)
 Session(app)
 
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
