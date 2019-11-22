@@ -6,37 +6,36 @@
 
 {% block welcome %}
     <style>
-        html {
-            background-color: #808080;
-        }
         .masthead {
             height: 100vh;
-            background-image: url("/static/img/welcome_img.svg");
+            background-image: url("https://i.imgur.com/QsStJF1.png");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             }
+        #topic > h1, h2 {
+            font-weight: bold;
+        }
     </style>
-    <header class="masthead">
-        <div class="container h-100">
-            <div class="row h-100 align-items-center">
-                <div class="col-12 text-center">
-                    <h1 style="letter-spacing: 0.8em;">對數字毫無概念？</h1>
-                    <h3 style="letter-spacing: 0.4em;">那就把數字變成喜歡的樣子</h3>
-                </div>
+    <header class="container-fluid masthead">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="p-3 col-12 bg-light text-center text-dark" id="topic" style="opacity: 0.7;">
+                <h1 style="letter-spacing: 0.8em;">對數字毫無概念？</h1>
+                <h2 style="letter-spacing: 0.2em;">那就把數字變成喜歡的樣子</h3>
             </div>
-
         </div>
     </header>
-    <section class="py-5">
-        <div class="container">
-            <div style="margin-top: 1.5em; margin-bottom: 1.5em; text-align: center;">
-                <h1 style="letter-spacing: 0.8em;" class="text-primary">訂製單位：你與●●的距離</h1>
-                <h3 class="text-muted" style="letter-spacing: 0.2em;">讓目標不再只是一組數字的輕量級網頁記帳APP</h3>
+    <section class="container-fluid">
+        <div class="row m-5">
+            <div class="col-12 text-center">
+                <h2 style="letter-spacing: 0.8em;" class="text-primary">訂製單位：你與●●的距離</h1>
+                <h3 class="text-muted" style="letter-spacing: 0.2em;">讓目標不再只是一組數字的輕量級記帳系APP</h3>
             </div>
-            <div class="row align-items-center">
+        </div>
+        <div class="row m-5 justify-content-center">
+            <div class="col-md-8 col-sm-12">
                 <button class="btn btn-primary btn-lg btn-block" onclick="location.href='/register'">註冊</button>
-                <button class="btn btn-secondary btn-lg btn-block" onclick="location.href='/login'">登入</button>
+                <button class="btn btn-outline-primary btn-lg btn-block" onclick="location.href='/login'">登入</button>
             </div>
         </div>
     </section>
