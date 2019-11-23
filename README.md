@@ -1,7 +1,6 @@
-![custom-made-unit banner](https://i.imgur.com/43MdIiw.png "cmu banner")
+![custom-made-unit banner](https://i.imgur.com/43MdIiw.png "custom-made-unit banner")
 # 訂製單位：你與●●的距離
 ### 把數字，變成喜歡的樣子
-URL: https://custom-made-unit.herokuapp.com/
 
 ### 概括
 - 超輕量網頁記帳系APP。
@@ -19,3 +18,6 @@ URL: https://custom-made-unit.herokuapp.com/
         - **新註冊的帳號都會先被引導至此進行目標物/目標金額設定**。
     - 組別訂製：最多四組帳目分類，可自訂組別名稱。
     - 帳號設定：修改密碼與email。
+### 直接試試看
+![QR code](https://i.imgur.com/Vcp7Mpf.png "QR code")
+URL: https://custom-made-unit.herokuapp.com/
