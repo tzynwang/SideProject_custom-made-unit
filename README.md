@@ -20,3 +20,4 @@
     - 帳號設定：修改密碼與email。
 ### 直接試試看
 ![QR code](https://i.imgur.com/Vcp7Mpf.png "QR code")
+URL: https://custom-made-unit.herokuapp.com/
