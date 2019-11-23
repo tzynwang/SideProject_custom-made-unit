@@ -10,7 +10,9 @@ from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLS
 from email_validator import validate_email
 from flask_session import Session
 from redis import Redis
-from helpers import db_connection, new_user, verify_input, verify_len, verify_mail, to_star, login_required
+from helpers import (db_connection, new_user,
+                     verify_input, verify_len, verify_mail,
+                     to_star, login_required)
 
 
 app = Flask(__name__)
@@ -20,9 +22,9 @@ app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_PERMANENT_LIFETIME"] = timedelta(days=14)
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_REDIS"] = Redis(
-    host = os.environ.get("SESSION_REDIS_HOST"),
-    port = os.environ.get("SESSION_REDIS_PORT"),
-    password= os.environ.get("SESSION_REDIS_PASSWORD")
+    host=os.environ.get("SESSION_REDIS_HOST"),
+    port=os.environ.get("SESSION_REDIS_PORT"),
+    password=os.environ.get("SESSION_REDIS_PASSWORD")
 )
 Session(app)
 
@@ -70,7 +72,7 @@ def register():
         conn = db_connection()
         hashpass = generate_password_hash(password)
         conn[0].execute("INSERT INTO users (id,username,hash,email) VALUES (DEFAULT,%s,%s,%s)",
-                           (username, hashpass, email))
+                        (username, hashpass, email))
         conn[1].commit()
 
         conn[0].execute("SELECT id,verified FROM users WHERE username = %s", (username,))
@@ -116,7 +118,7 @@ def register():
 
 @app.route("/check/mail")
 def check_mail():
-    """for register/pass_forget.html"""
+    """for register/pass_forget/setting_account.html"""
     email = request.args.get("email")
     if verify_mail(email) == "mail_new":
         return jsonify(True)
@@ -154,6 +156,7 @@ def check_pass():
 @app.route("/token/sent")
 @login_required
 def token_sent():
+    """for index/token_verify_fail.html"""
     now = datetime.now().replace(microsecond=0)
     last = session.get("last")
 
@@ -268,6 +271,7 @@ def login():
 
 @app.route("/pass/forget", methods=["GET", "POST"])
 def pass_forget():
+    """for login.html"""
     if request.method == "POST":
         user = request.form.get("input")
         if not user:
@@ -351,7 +355,7 @@ def pass_reset():
             hashpass = generate_password_hash(password)
             conn = db_connection()
             conn[0].execute("UPDATE users SET hash = %s WHERE username = %s",
-                               (hashpass, username))
+                            (hashpass, username))
             conn[1].commit()
             session.clear()
             return render_template("pass_reset_done.html")
@@ -390,7 +394,7 @@ def index():
 
         # get target-setting status
         conn[0].execute("SELECT targetunit,target,targetamount from targets where userid = %s",
-                           (userid,))
+                        (userid,))
         row = conn[0].fetchone()
 
         # no targetamount info
@@ -462,8 +466,8 @@ def bill_add():
 
         # input OK, insert into db
         conn[0].execute("INSERT INTO bills (id,userid,groupkey,amount,notes,datestamp) \
-                           VALUES (DEFAULT,%s,%s,%s,%s,%s)",
-                           (userid, group_key, amount_int, notes, datestamp))
+                        VALUES (DEFAULT,%s,%s,%s,%s,%s)",
+                        (userid, group_key, amount_int, notes, datestamp))
         conn[1].commit()
         return redirect(url_for("index"))
     else:
@@ -484,6 +488,7 @@ def bill_view():
 @app.route("/bill/filter", methods=["POST"])
 @login_required
 def bill_filter():
+    """for bill_view.html"""
     userid = session.get("id")
     conn = db_connection()
     start = int("".join((request.get_json()["start"]).split("-")))
@@ -517,6 +522,7 @@ def bill_filter():
 @app.route("/bill/edit", methods=["POST"])
 @login_required
 def bill_edit():
+    """for bill_view.html"""
     bill_update = request.get_json()["content"]
     userid = bill_update["id"]
     conn = db_connection()
@@ -541,6 +547,7 @@ def bill_edit():
 @app.route("/bill/delete", methods=["POST"])
 @login_required
 def bill_delete():
+    """for bill_view.html"""
     bill_to_delete = request.get_json()["id"]
     conn = db_connection()
     conn[0].execute("DELETE from bills WHERE id = %s", (bill_to_delete,))
@@ -586,7 +593,7 @@ def setting_target():
                 return jsonify(False)
             if int(value) > 1 and int(value) < 2147483647:
                 conn[0].execute("UPDATE targets SET targetamount = %s WHERE userid = %s",
-                                   (value, userid))
+                                (value, userid))
                 conn[1].commit()
                 updated_targets.update({key: value})
         if key == "target" and value and len(value) < 25:
@@ -595,7 +602,7 @@ def setting_target():
             updated_targets.update({key: value})
         if key == "targetUnit" and value and len(value) < 9:
             conn[0].execute("UPDATE targets SET targetunit = %s WHERE userid = %s",
-                               (value, userid))
+                            (value, userid))
             conn[1].commit()
             updated_targets.update({key: value})
 
@@ -614,7 +621,7 @@ def setting_group():
         return jsonify(False)
     else:
         conn[0].execute(f"UPDATE users SET {group_key} = %s WHERE id = %s",
-                           (new_group_name, userid))
+                        (new_group_name, userid))
         conn[1].commit()
         # get updated group name(s)
         conn[0].execute("SELECT g0, g1, g2, g3 FROM users WHERE id = %s", (userid,))
