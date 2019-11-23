@@ -1,7 +1,7 @@
-![custom-made-unit banner](https://i.imgur.com/43MdIiw.png "cmu banner")
+![custom-made-unit banner](https://i.imgur.com/43MdIiw.png "custom-made-unit banner")
 # 訂製單位：你與●●的距離
 ### 把數字，變成喜歡的樣子
-URL: https://custom-made-unit.herokuapp.com/
+![QR code](https://i.imgur.com/f2uqTnU.png "QR code")
 
 ### 概括
 - 超輕量網頁記帳系APP。
