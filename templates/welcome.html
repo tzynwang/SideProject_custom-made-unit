@@ -6,37 +6,51 @@
 
 {% block welcome %}
     <style>
-        .masthead {
-            height: 100vh;
-            background-image: url("/static/img/welcome_img.svg");
+        .back-img {
+            background-image: url("/static/img/welcome_img_2.png");
             background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-position: center center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.15;
             }
-        #topic > h1, h2 {
+        div > h1, h2 {
             font-weight: bold;
         }
+        .h-shadow {
+            text-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+        }
     </style>
-    <header class="container-fluid masthead">
-        <div class="row h-100 justify-content-center align-items-center" style="margin-top: 0;">
-            <div class="p-3 col-12 bg-light text-center text-dark" id="topic" style="opacity: 0.7;">
+    <header class="container-fluid">
+        <div class="back-img"></div>
+        <div class="row mt-5 justify-content-center align-items-center h-shadow">
+            <div class="p-3 mb-5 col-12 text-center text-dark">
                 <h1 style="letter-spacing: 0.8em;">對數字毫無概念？</h1>
-                <h2 style="letter-spacing: 0.2em;">那就把數字變成喜歡的樣子</h3>
+                <h2 style="letter-spacing: 0.2em;">那就把數字變成喜歡的樣子</h2>
+            </div>
+
+            <div class="mt-5 mb-5 col-12 text-center h-shadow">
+                <h1 class="text-primary" style="letter-spacing: 0.8em;" >訂製單位：</h1>
+                <h2 class="text-dark" style="letter-spacing: 0.2em;">讓目標不再只是一組數字的輕量級記帳系APP</h2>
+            </div>
+
+            <div class="row col-8 mt-5">
+                <div class="col-md-6 col-sm-12 mb-2">
+                    <button class="btn btn-primary btn-lg btn-block shadow-sm" onclick="location.href='/register'">註冊</button>
+                </div>
+                <div class="col-md-6 col-sm-12">
+                    <button class="btn btn-outline-primary btn-lg btn-block shadow-sm" onclick="location.href='/login'">登入</button>
+                </div>
             </div>
         </div>
-    </header>
-    <section class="container-fluid">
         <div class="row m-5">
-            <div class="col-12 text-center">
-                <h2 style="letter-spacing: 0.8em;" class="text-primary">訂製單位：你與●●的距離</h1>
-                <h3 class="text-muted" style="letter-spacing: 0.2em;">讓目標不再只是一組數字的輕量級記帳系APP</h3>
-            </div>
+
         </div>
         <div class="row m-5 justify-content-center">
-            <div class="col-md-8 col-sm-12">
-                <button class="btn btn-primary btn-lg btn-block" onclick="location.href='/register'">註冊</button>
-                <button class="btn btn-outline-primary btn-lg btn-block" onclick="location.href='/login'">登入</button>
-            </div>
+
         </div>
-    </section>
+    </header>
 {% endblock %}
