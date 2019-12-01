@@ -18,7 +18,6 @@ from helpers import (db_connection, new_user,
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
-app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=14)
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_REDIS"] = Redis(
@@ -77,6 +76,7 @@ def register():
 
         conn[0].execute("SELECT id,verified FROM users WHERE username = %s", (username,))
         row = conn[0].fetchone()
+        session.permanent = True
         session["id"] = row[0]
         session["verified"] = row[1]
 
@@ -262,6 +262,7 @@ def login():
             conn[0].execute("SELECT id,verified from users WHERE username = %s", (username,))
             row = conn[0].fetchone()
             # pack user information into session
+            session.permanent = True
             session["id"] = row[0]
             session["verified"] = row[1]
             return redirect(url_for("index"))
