@@ -58,7 +58,11 @@
             </div>
 
             <div class="row row-btn">
-                <button class="btn btn-primary btn-lg btn-block" type="submit">記帳</button>
+                {% if session.role != "guest" %}
+                    <button class="btn btn-primary btn-lg btn-block" type="submit">記帳</button>
+                {% else %}
+                    <button class="btn btn-primary btn-lg btn-block">記帳(偽)</button>
+                {% endif %}
             </div>
         </form>
     </div>

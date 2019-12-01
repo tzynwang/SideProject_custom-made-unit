@@ -75,13 +75,27 @@
             </div>
             <div class="row row-btn">
                 <div class="col">
-                    <button class="btn btn-primary btn-block" id="toUpdate" style="margin-right: 1em;" onclick="recordEdit(trID)">修改</button>
+
+                    <button class="btn btn-primary btn-block" id="toUpdate" style="margin-right: 1em;" onclick="recordEdit(trID)">
+                        {% if session.role != "guest" %}
+                            修改
+                        {% else %}
+                            修改(偽)
+                        {% endif %}
+                    </button>
                 </div>
                 <div class="col">
                     <button class="btn btn-secondary btn-block" style="margin-right: 1em;" onclick="cancelEdit()">算了</button>
                 </div>
                 <div class="col">
-                    <button class="btn btn-light btn-block" id="trashIcon" data-toggle="modal" data-target="#deleteConfirm">刪除</button>
+
+                    <button class="btn btn-light btn-block" id="trashIcon" data-toggle="modal" data-target="#deleteConfirm">
+                        {% if session.role != "guest" %}
+                            刪除
+                        {% else %}
+                            刪除(偽)
+                        {% endif %}
+                    </button>
                 </div>
             </div>
         </div>
@@ -132,6 +146,10 @@
     </div>
 </div>
 
+{% if session.role != "guest" %}
 <script src="/static/js/bill_view.js?version=9"></script>
+{% else %}
+<script src="/static/js/bill_view_guest.js?version=0"></script>
+{% endif %}
 
 {% endblock %}

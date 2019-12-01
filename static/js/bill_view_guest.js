@@ -167,24 +167,16 @@ $("#ediAmount").on("change", function() {
 });
 
 $("#deleteBill").on("click", function() {
-	$.ajax({
-		url: "/bill/delete",
-		type: "POST",
-		data: JSON.stringify({"id": trID}),
-		contentType: "application/json",
-		success: function(result) {
-			$("#"+trID).remove();
-			trID = null;
+	$("#"+trID).remove();
+	trID = null;
 
-			$("#closed").click();
+	$("#closed").click();
 
-			var newSum = 0;
-			$("td[id$=ediAmount]").each(function() {
-				newSum += Number($(this).text());
-			});
-			$("#sum").text(newSum);
-		}
+	var newSum = 0;
+	$("td[id$=ediAmount]").each(function() {
+		newSum += Number($(this).text());
 	});
+	$("#sum").text(newSum);
 });
 
 var trID = null;
@@ -234,21 +226,10 @@ function recordEdit(rowID) {
 			$(this).val("");
 		});
 
-		$.ajax({
-			url: "/bill/edit",
-			type: "POST",
-			data: JSON.stringify({"content":editItem}),
-			dataType: "json",
-			contentType: "application/json; charset=UTF-8",
-			success: function(result) {
-				if (result == true) {
-					$("#hintText").html("更新成功");
-					$("#hintBox").attr("class","alert alert-success");
-					$("#hintBox").show().delay(1500).fadeOut();
-					$("#"+rowID).css("background-color", "transparent");
-				}
-			}
-		});
+		$("#hintText").html("更新成功");
+		$("#hintBox").attr("class","alert alert-success");
+		$("#hintBox").show().delay(1500).fadeOut();
+		$("#"+rowID).css("background-color", "transparent");
 
 		// update tr display content(s)
 		$.each(editItem, function(key, value){

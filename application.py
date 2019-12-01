@@ -45,6 +45,16 @@ def welcome():
     return render_template("welcome.html")
 
 
+@app.route("/guest")
+def guest():
+    session.clear()
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=15)
+    session["role"] = "guest"
+    session["id"] = 13
+    session["verified"] = True
+    return redirect(url_for("index"))
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
