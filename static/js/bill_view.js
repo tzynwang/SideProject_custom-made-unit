@@ -221,7 +221,6 @@ function recordEdit(rowID) {
 			editItem[key] = value;
 		}
 	});
-	console.log(editItem); //testcode
 
 	if ($.isEmptyObject(editItem)) {
 		$("#hintText").html("請填入至少一個修改內容，或按下「算了」取消修改");
