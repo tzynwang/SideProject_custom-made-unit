@@ -1,7 +1,7 @@
-{% if session.id %}
+{% if session.id  %}
 <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top py-3 shadow-sm" id="mainNav">
 {% else %}
-<nav class="navbar navbar-expand-sm navbar-light fixed-top py-3 shadow-sm" id="mainNav"></nav>
+<nav class="navbar navbar-expand-sm navbar-light fixed-top py-3 shadow-sm" id="mainNav">
 {% endif %}
     <div class="container">
         <a class="navbar-brand js-scroll-trigger" href="/">
@@ -27,7 +27,7 @@
             {% else %}
                 <ul class="navbar-nav mr-auto my-2 my-lg-0">
                     <li class="nav-item"><a class="nav-link js-scroll-trigger" href="#intro">介紹</a></li>
-                    <li class="nav-item"><a class="nav-link js-scroll-trigger" href="#portals">使用</a></li>
+                    <li class="nav-item ml-lg-0 ml-sm-2"><a class="nav-link js-scroll-trigger" href="#portals">使用</a></li>
                 </ul>
                     <ul class="navbar-nav ml-auto my-2 my-lg-0">
                     <li class="nav-item"><a class="nav-link" href="/login">登入</a></li>
