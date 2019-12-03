@@ -1,27 +1,34 @@
-<nav class="navbar navbar-expand-sm navbar-light bg-light shadow-sm"
-style="width: 100%; position: fixed; z-index: 2000; font-weight: 300;">
-    <a class="navbar-brand" href="/" style="letter-spacing: 0.25em;">
-        訂製單位
-    </a>
-    <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-target="#navbar" data-toggle="collapse" type="button">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbar">
-        {% if session.id and session.verified %}
-            <ul class="navbar-nav mr-auto mt-2" id="ulLeft">
-                <li class="nav-item"><a class="nav-link" href="/bill/add">記帳</a></li>
-                <li class="nav-item"><a class="nav-link" href="/bill/view">瀏覽||編輯</a></li>
-                <li class="nav-item"><a class="nav-link" href="/setting">設定</a></li>
-            </ul>
-            <ul class="navbar-nav ml-auto mt-2" id="ulRight">
-                <li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>
-            </ul>
-        {% elif session.id %}
-            <ul class="navbar-nav ml-auto mt-2" id="ulRight">
-                <li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>
-            </ul>
-        {% else %}
-            ## pass
-        {% endif %}
+<nav class="navbar navbar-expand-sm navbar-light fixed-top py-3 shadow-sm" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand js-scroll-trigger" href="/">
+            訂製單位
+        </a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbar">
+            {% if session.id and session.verified %}
+                <ul class="navbar-nav mr-auto mt-2" id="ulLeft">
+                    <li class="nav-item"><a class="nav-link" href="/bill/add">記帳</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/bill/view">瀏覽||編輯</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/setting">設定</a></li>
+                </ul>
+                <ul class="navbar-nav ml-auto mt-2" id="ulRight">
+                    <li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>
+                </ul>
+            {% elif session.id %}
+                <ul class="navbar-nav ml-auto mt-2" id="ulRight">
+                    <li class="nav-item"><a class="nav-link" href="/logout">登出</a></li>
+                </ul>
+            {% else %}
+                <ul class="navbar-nav mr-auto my-2 my-lg-0">
+                    <li class="nav-item"><a class="nav-link js-scroll-trigger" href="#intro">介紹</a></li>
+                    <li class="nav-item"><a class="nav-link js-scroll-trigger" href="#portals">使用</a></li>
+                </ul>
+                    <ul class="navbar-nav ml-auto my-2 my-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/login">登入</a></li>
+                </ul>
+            {% endif %}
+        </div>
     </div>
 </nav>

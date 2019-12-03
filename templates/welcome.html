@@ -4,53 +4,72 @@
     歡迎
 {%- endblock %}
 
+{% block nav %}
+    {% include "nav.html" %}
+{% endblock %}
+
 {% block welcome %}
-    <style>
-        .back-img {
-            background-image: url("/static/img/welcome_img_2.png");
-            background-size: cover;
-            background-position: center center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0.15;
-            }
-        div > h1, h2 {
-            font-weight: bold;
-        }
-        .h-shadow {
-            text-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-        }
-    </style>
-    <header class="container-fluid">
-        <div class="back-img"></div>
-        <div class="row mt-5 justify-content-center align-items-center h-shadow">
-            <div class="p-3 mb-5 col-12 text-center text-dark">
-                <h1 style="letter-spacing: 0.6em;">對數字毫無概念？</h1>
-                <h2 style="letter-spacing: 0.2em;">那就把數字變成喜歡的樣子</h2>
+    <link href="/static/css/creative.css" rel="stylesheet">
+
+    ## Masthead
+    <header class="masthead">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center justify-content-center text-center">
+            <div class="col-lg-10 align-self-end">
+                <h1 class="text-white font-weight-bold letter-space">對數字毫無概念？</h1>
             </div>
-
-            <div class="mt-5 mb-5 col-12 text-center h-shadow">
-                <h1 class="text-primary" style="letter-spacing: 0.6em;" >訂製單位：</h1>
-                <h2 class="text-dark" style="letter-spacing: 0.2em;">讓目標不再只是一組數字的輕量級記帳系APP</h2>
+            <div class="col-lg-8 align-self-baseline">
+                <p class="text-white-75 font-weight-light mb-5 letter-space">那就把數字變成喜歡的樣子</p>
+                <a class="btn btn-primary btn-lg js-scroll-trigger" href="#intro"><i class="fas fa-angle-double-down fa-x"></i> 很簡單</a>
             </div>
-
-            <div class="row col-8 mt-5">
-                <div class="col-md-6 col-sm-12 mb-2">
-                    <button class="btn btn-primary btn-lg btn-block shadow-sm" onclick="location.href='/register'">註冊</button>
-                </div>
-                <div class="col-md-6 col-sm-12">
-                    <button class="btn btn-outline-primary btn-lg btn-block shadow-sm" onclick="location.href='/login'">登入</button>
-                </div>
             </div>
-        </div>
-        <div class="row m-5">
-
-        </div>
-        <div class="row m-5 justify-content-center">
-
         </div>
     </header>
+
+    ## Intro Section
+    <section class="page-section bg-primary" id="intro">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 align-self-end">
+                    <h1 class="text-white font-weight-bold letter-space">訂製單位</h1>
+                    <p class="text-white-50 mb-4">讓目標不再只是一組數字的輕量級記帳系APP</p>
+                    <ul class="text-white-50 mb-4">
+                        <li>操作簡單：就算是平板或手機也可以輕鬆使用──隨想即開、隨開即記。</li>
+                        <li>功能單純：記帳、瀏覽過去帳目、修改不小心打錯的資料──就是這些。</li>
+                        <li>單一目標：用一個具體的目標來描述每個月的消費金額──把數字，變成喜歡的樣子。</li>
+                    </ul>
+                </div>
+                <div class="col-lg-8 align-items-center justify-content-center text-center">
+                    <a class="btn btn-light btn-lg js-scroll-trigger" href="#portals"><i class="fas fa-angle-double-down fa-x"></i> 試試看</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    ## Portals Section
+    <section class="page-section" id="portals">
+        <div class="container p-5">
+            <div class="row text-center">
+                <div class="col-lg-4 col-md-12 p-3 order-lg-0 order-1">
+                    <h3>先試試？</h3>
+                    <i class="fas fa-user-secret fa-5x text-primary mt-2"></i>
+                    <button class="btn btn-outline-primary btn-lg btn-block mt-3" onclick="location.href='/guest'">開始體驗</button><br>
+                    <small class="">體驗版可以使用除帳號設定以外的全部功能。<br>提示：在體驗版輸入的所有資料都不會被記錄下來。</small>
+                </div>
+                <div class="col-lg-4 col-md-12 p-3 order-lg-1 order-0">
+                    <h3>馬上開始！</h3>
+                    <i class="fas fa-edit fa-5x text-primary mt-2"></i>
+                    <button class="btn btn-primary btn-lg btn-block mt-3" onclick="location.href='/register'">點此註冊</button>
+                </div>
+                <div class="col-lg-4 col-md-12 p-3 order-lg-2 order-2">
+                    <h3>已經擁有帳號</h3>
+                    <i class="fas fa-door-open fa-5x text-primary mt-2"></i>
+                    <button class="btn btn-outline-primary btn-lg btn-block mt-3" onclick="location.href='/login'">登入服務</button><br>
+                    <small>提示：其實一直都在畫面右上角<br>（或是包含在上方導覽行內）</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="static/js/creative.min.js"></script>
 {% endblock %}
