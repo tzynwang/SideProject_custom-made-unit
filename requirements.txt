@@ -8,3 +8,4 @@ werkzeug
 psycopg2
 Gunicorn
 redis
+apscheduler
