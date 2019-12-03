@@ -5,14 +5,15 @@ import psycopg2
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_mail import Mail, Message
+from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+from apscheduler.schedulers.background import BackgroundScheduler
 from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
 from email_validator import validate_email
-from flask_session import Session
 from redis import Redis
 from helpers import (db_connection, new_user,
                      verify_input, verify_len, verify_mail,
-                     to_star, login_required)
+                     to_star, guest_delete, login_required)
 
 
 app = Flask(__name__)
@@ -36,6 +37,10 @@ app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
 app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
 mail = Mail(app)
 
+scheduler = BackgroundScheduler()
+scheduler.add_job(guest_delete, 'interval', minutes=5)
+scheduler.start()
+
 app.jinja_env.line_comment_prefix = "##"
 
 
@@ -49,11 +54,12 @@ def welcome():
 def guest():
     session.clear()
     session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=15)
+    app.permanent_session_lifetime = timedelta(minutes=10)
     session["role"] = "guest"
     session["id"] = 13
     session["verified"] = True
     return redirect(url_for("index"))
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():

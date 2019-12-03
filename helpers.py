@@ -78,6 +78,13 @@ def to_star(email_local):
     return email_star
 
 
+def guest_delete():
+    conn = db_connection()
+    conn[0].execute("DELETE from bills WHERE userid = 13 AND guest_default IS NULL")
+    conn[1].commit()
+    return True
+
+
 def login_required(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):

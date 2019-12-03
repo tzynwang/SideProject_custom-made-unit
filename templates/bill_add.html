@@ -57,11 +57,12 @@
                 </div>
             </div>
 
-            <div class="row row-btn">
+            <div class="row row-btn justify-content-center">
                 {% if session.role != "guest" %}
                     <button class="btn btn-primary btn-lg btn-block" type="submit">記帳</button>
                 {% else %}
-                    <button class="btn btn-primary btn-lg btn-block">記帳(偽)</button>
+                    <button class="btn btn-primary btn-lg btn-block">記帳(偽)</button><br>
+                    <small>提示：體驗版帳號即使按下記帳按鈕，也不會新增任何帳目資料。</small>
                 {% endif %}
             </div>
         </form>
