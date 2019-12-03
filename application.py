@@ -1,4 +1,5 @@
 import os
+import atexit
 from datetime import datetime, timedelta
 
 import psycopg2
@@ -40,6 +41,7 @@ mail = Mail(app)
 scheduler = BackgroundScheduler()
 scheduler.add_job(guest_delete, 'interval', minutes=5)
 scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
 
 app.jinja_env.line_comment_prefix = "##"
 
