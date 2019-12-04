@@ -95,6 +95,7 @@ def register():
         conn[0].execute("SELECT id,verified FROM users WHERE username = %s", (username,))
         row = conn[0].fetchone()
         session.permanent = True
+        app.permanent_session_lifetime = timedelta(days=14)
         session["id"] = row[0]
         session["verified"] = row[1]
 
@@ -281,6 +282,7 @@ def login():
             row = conn[0].fetchone()
             # pack user information into session
             session.permanent = True
+            app.permanent_session_lifetime = timedelta(days=14)
             session["id"] = row[0]
             session["verified"] = row[1]
             return redirect(url_for("index"))
