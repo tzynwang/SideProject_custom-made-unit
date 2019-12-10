@@ -381,7 +381,6 @@ def pass_reset():
             session.clear()
             return render_template("pass_reset_done.html")
     else:
-        # redirect from pass_reset_verify() BadSignature
         return render_template("pass_reset.html")
 
 

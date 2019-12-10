@@ -13,8 +13,10 @@
     <div class="container con-form welcome-form">
     {% if not session.reset %}
         <h3 class="text-center">非常抱歉</h3>
-        <p>重置過程出現問題，請回到首頁再次嘗試進行重設密碼的需求，謝謝。</p>
-        <div class="row row-btn"><button class="btn btn-primary btn-lg btn-block" onclick="location.href='/'">回首頁</button></div>
+        <p>重置過程出現問題，請再次發出重設密碼的需求，謝謝。</p>
+        <div class="row row-btn">
+            <button class="btn btn-primary btn-lg btn-block" onclick="location.href='/pass/forget'">重新發出需求</button>
+        </div>
     {% else %}
         {% if session.error %}
             <div class="alert alert-warning" role="alert">
