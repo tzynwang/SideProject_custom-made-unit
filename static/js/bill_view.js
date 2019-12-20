@@ -22,18 +22,18 @@ $("input[name='dateSelect']").on("change", function() {
 	else {
 		$("#dateselector").hide();
 		if (pick == "thisday") {
-			$("#start").attr("value", today);
-			$("#end").attr("value", today);
+			$("#start").val(today);
+			$("#end").val(today);
 		}
 		if (pick == "thisweek") {
 			var weekstart = moment().startOf('week').format(moment.HTML5_FMT.DATE);
-			$("#start").attr("value", weekstart);
-			$("#end").attr("value", today);
+			$("#start").val(weekstart);
+			$("#end").val(today);
 		}
 		if (pick == "thismonth") {
 			var monstart = moment().startOf('month').format(moment.HTML5_FMT.DATE);
-			$("#start").attr("value", monstart);
-			$("#end").attr("value", today);
+			$("#start").val(monstart);
+			$("#end").val(today);
 		}
 	}
 });
