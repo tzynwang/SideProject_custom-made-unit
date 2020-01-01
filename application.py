@@ -400,11 +400,16 @@ def index():
     else:
         # get this month's bill(s) SUM
         today = datetime.now()
-        date_start = int(str(today.year)+str(today.month)+str(0)+str(0))
-        date_end = int(str(today.year)+str(today.month)+str(32))
+        if today.month < 10:
+            month = "0"+str(today.month)
+        else:
+            month = str(today.month)
+        date_start = int(str(today.year)+month+str(0)+str(0))
+        date_end = int(str(today.year)+month+str(32))
         conn[0].execute("SELECT SUM(amount) FROM bills WHERE userid = %s \
                            AND datestamp BETWEEN %s AND %s", (userid, date_start, date_end))
         row = conn[0].fetchone()
+        print(row) ##
 
         # in case of no bill
         if row[0] is None:

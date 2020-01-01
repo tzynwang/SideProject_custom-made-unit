@@ -76,6 +76,11 @@
             var t = new Date();
             var YYYY = t.getFullYear();
             var MM = t.getMonth()+1; // getMonth() is zero-based
+            console.log(typeof MM); //
+            if (MM < 10) {
+                MM = "0"+MM;
+                console.log(typeof MM); //
+            }
             thisMonth = YYYY+"-"+MM;
 
             $("#calender").attr({
